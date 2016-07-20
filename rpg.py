@@ -40,7 +40,7 @@ def terminate():
 
 class Character(object):
     scores = {
-        'strength': 10,
+        'strength': 20,
         'dex': 10,
         'con': 10,
         'intelligence': 10,
