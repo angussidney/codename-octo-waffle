@@ -39,13 +39,25 @@ def terminate():
     sys.exit()
 
 class Character(object):
+    proficiency_bonus = 2
     scores = {
-        'strength': 20,
+        'strength': 10,
         'dex': 10,
         'con': 10,
         'intelligence': 10,
         'wis': 10,
         'cha': 10
+    }
+    skills = {
+        'athletics': False #str
+        'acrobatics': False #dex
+        'sleight_of_hand': False #dex
+        'stealth': False #dex
+        'arcana': False #int
+        'history': False #int
+        'investigation': False #int
+        'nature': False #int
+        'religion': False #int
     }
 
 
