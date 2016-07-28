@@ -2,12 +2,21 @@ import random, pygame, sys
 from pygame.locals import *
 
 # All options for game
-WINDOWWIDTH = 800
+WINDOWWIDTH = 600
 WINDOWHEIGHT = 600
 WINDOWCAPTION = "RPG Game"
 WINDOWICON = "icon.png"
 
 FONTSIZE = 20
+
+
+# Colour      R    G    B   (A)
+# ==============================
+WHITE     = (255, 255, 255)
+BLACK     = (  0,   0,   0)
+RED       = (255,   0,   0)
+BLUE      = (  0,   0, 255)
+GREEN     = (  0, 255,   0)
 
 
 def main ():
@@ -26,7 +35,10 @@ def main ():
 
     # Fonts
     BASICFONT = pygame.font.Font('freesansbold.ttf', FONTSIZE)
-    
+
+    DISPLAY.fill(WHITE)
+    pygame.draw.rect(DISPLAY, RED, (0, 0, 600, 400))
+    pygame.draw.rect(DISPLAY, BLACK, (0, 0, 40, 40))
     
     while True: # main game loop
         for event in pygame.event.get():
