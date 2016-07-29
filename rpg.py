@@ -9,6 +9,8 @@ WINDOWICON = "icon.png"
 
 FONTSIZE = 20
 
+LEVELFILE = "levels.txt"
+
 
 # Colour      R    G    B   (A)
 # ==============================
