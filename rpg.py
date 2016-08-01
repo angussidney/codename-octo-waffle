@@ -96,6 +96,20 @@ class Character(object):
         else:
             return self.scores[skills[skill][1]]
 
+class SceneBase(object):
+    def __init__(self):
+        self.next = self
+    
+    def ProcessInput(self, events):
+        print("uh-oh, you didn't override this in the child class")
+    
+    def Update(self):
+        print("uh-oh, you didn't override this in the child class")
+    
+    def Render(self, screen):
+        print("uh-oh, you didn't override this in the child class")
+
+
 
 if __name__ == '__main__':
     main()
