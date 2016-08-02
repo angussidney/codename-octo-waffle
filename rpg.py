@@ -96,18 +96,35 @@ class Character(object):
         else:
             return self.scores[skills[skill][1]]
 
+class Goblin(object):
+    ac = 15
+    hp = 7
+    speed = 30
+    scores = {
+        'strength': 8,
+        'dex': 14,
+        'con': 10,
+        'intelligence': 10,
+        'wis': 8,
+        'cha': 8
+    }
+    xp = 50
+
 class SceneBase(object):
     def __init__(self):
         self.next = self
     
     def ProcessInput(self, events):
-        print("uh-oh, you didn't override this in the child class")
+        # Recieves all events that have happened since last frame
+        raise NotImplementedError('Don\'t forget to override this in the child class!')
     
     def Update(self):
-        print("uh-oh, you didn't override this in the child class")
+        # Game logic goes here
+        raise NotImplementedError('Don\'t forget to override this in the child class!')
     
     def Render(self, screen):
-        print("uh-oh, you didn't override this in the child class")
+        # Render to the main display object
+        raise NotImplementedError('Don\'t forget to override this in the child class!')
 
 
 
