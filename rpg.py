@@ -1,4 +1,7 @@
-import random, pygame, sys
+import math
+import random
+import sys
+import pygame
 from pygame.locals import *
 
 # All options for game
@@ -63,6 +66,7 @@ class Character(object):
         'cha': 10
     }
     skills = {
+        # 'skill': (is_proficient, base score)
         'athletics': (False, 'strength'),
         'acrobatics': (False, 'dex'),
         'sleight_of_hand': (False, 'dex'),
@@ -82,24 +86,20 @@ class Character(object):
         'performance': (False, 'cha'),
         'persuasion': (False, 'cha')
     }
-    saving_throws = {
-        'strength': False,
-        'dex': False,
-        'con': False,
-        'intelligence': False,
-        'wis': False,
-        'cha': False
-    }
-    def calculate_skill (self, skill):
+    def score_to_bonus (self, score):
+        return math.floor((self.scores[score] - 10) / 2)
+    def calculate_bonus (self, skill):
         if self.skills[skill][0] == True:
-            return self.scores[skills[skill][1]] + self.proficiency_bonus
+            return self.score_to_bonus(self.skills[skill][1]) + self.proficiency_bonus
         else:
-            return self.scores[skills[skill][1]]
+            return self.score_to_bonus(self.skills[skill][1])
 
 class Goblin(object):
     ac = 15
     hp = 7
     speed = 30
+    xp = 50
+    languages = ['Common', 'Goblin']
     scores = {
         'strength': 8,
         'dex': 14,
@@ -108,7 +108,7 @@ class Goblin(object):
         'wis': 8,
         'cha': 8
     }
-    xp = 50
+
 
 class SceneBase(object):
     def __init__(self):
@@ -125,8 +125,6 @@ class SceneBase(object):
     def Render(self, screen):
         # Render to the main display object
         raise NotImplementedError('Don\'t forget to override this in the child class!')
-
-
 
 if __name__ == '__main__':
     main()
