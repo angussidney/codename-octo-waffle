@@ -1,8 +1,11 @@
 import math
 import random
 import sys
+
 import pygame
 from pygame.locals import *
+
+import levels
 
 # All options for game
 WINDOWWIDTH = 600
@@ -66,7 +69,7 @@ class Character(object):
         'cha': 10
     }
     skills = {
-        # 'skill': (is_proficient, base score)
+        # 'skill': (is_proficient, base score),
         'athletics': (False, 'strength'),
         'acrobatics': (False, 'dex'),
         'sleight_of_hand': (False, 'dex'),
@@ -85,6 +88,14 @@ class Character(object):
         'intimidation': (False, 'cha'),
         'performance': (False, 'cha'),
         'persuasion': (False, 'cha')
+    }
+    saving_throws = {
+        'strength': False,
+        'dex': False,
+        'con': False,
+        'intelligence': False,
+        'wis': False,
+        'cha': False
     }
     def score_to_bonus (self, score):
         return math.floor((self.scores[score] - 10) / 2)
