@@ -47,6 +47,7 @@ def main ():
     DISPLAY.fill(WHITE)
     pygame.draw.rect(DISPLAY, RED, (0, 0, 600, 400))
     pygame.draw.rect(DISPLAY, BLACK, (0, 0, 40, 40))
+    copy_tile_to_screen('tile.png', 20, 0)
     
     while True: # main game loop
         for event in pygame.event.get():
@@ -136,6 +137,10 @@ class SceneBase(object):
     def Render(self, screen):
         # Render to the main display object
         raise NotImplementedError('Don\'t forget to override this in the child class!')
+
+def copy_tile_to_screen (x, y, image):
+    tile_img = pygame.image.load(image)
+    DISPLAY.blit(tile_img, (x, y))
 
 if __name__ == '__main__':
     main()
