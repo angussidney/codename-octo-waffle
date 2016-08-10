@@ -1,6 +1,7 @@
 import math
 import random
 import sys
+import os
 
 import pygame
 from pygame.locals import *
@@ -47,7 +48,7 @@ def main ():
     DISPLAY.fill(WHITE)
     pygame.draw.rect(DISPLAY, RED, (0, 0, 600, 400))
     pygame.draw.rect(DISPLAY, BLACK, (0, 0, 40, 40))
-    copy_tile_to_screen('tile.png', 20, 0)
+    set_tile(40, 0, 'tiles\tile2.png')
     
     while True: # main game loop
         for event in pygame.event.get():
@@ -121,7 +122,6 @@ class Goblin(object):
         'cha': 8
     }
 
-
 class SceneBase(object):
     def __init__(self):
         self.next = self
@@ -138,7 +138,7 @@ class SceneBase(object):
         # Render to the main display object
         raise NotImplementedError('Don\'t forget to override this in the child class!')
 
-def copy_tile_to_screen (x, y, image):
+def set_tile (x, y, image):
     tile_img = pygame.image.load(image)
     DISPLAY.blit(tile_img, (x, y))
 
