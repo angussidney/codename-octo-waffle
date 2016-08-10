@@ -1,3 +1,7 @@
+####################
+# Todo: credit pixel art font (cc-by-sa)
+####################
+
 import math
 import random
 import sys
