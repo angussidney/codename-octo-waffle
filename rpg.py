@@ -52,7 +52,7 @@ def main ():
     DISPLAY.fill(WHITE)
     pygame.draw.rect(DISPLAY, RED, (0, 0, 600, 400))
     pygame.draw.rect(DISPLAY, BLACK, (0, 0, 40, 40))
-    set_tile(40, 0, 'tiles\tile2.png')
+    set_tile(1, 0, os.path.join('tiles', 'tile2.png'))
     
     while True: # main game loop
         for event in pygame.event.get():
@@ -142,9 +142,34 @@ class SceneBase(object):
         # Render to the main display object
         raise NotImplementedError('Don\'t forget to override this in the child class!')
 
+class TitleScreen(SceneBase):
+    def __init__(self):
+        SceneBase.__init__(self)
+    
+    def ProcessInput(self):
+        pass
+
+    def Update(self):
+        pass
+
+    def Render(self):
+        DISPLAY.fill(BLACK)
+        
+
 def set_tile (x, y, image):
-    tile_img = pygame.image.load(image)
-    DISPLAY.blit(tile_img, (x, y))
+    tile_img = pygame.image.load(image).convert_alpha()
+    DISPLAY.blit(tile_img, tile_to_pixel_coords(x, y))
+
+def pixel_to_tile_coords (x, y):
+    # Converts pixel co-ordinates (x, y) to tile co-ordinates (x, y)
+    # E.g. (36, 90) => (0, 2)
+    # x+1 and y+1 so that (40, 40) is (1, 1) not (0, 0) 
+    return (math.floor((x + 1) / 40), math.floor((y + 1) / 40))
+
+def tile_to_pixel_coords (x, y):
+    # Takes a tile co-ordinate and returns the top-left pixel co-ordinate
+    # E.g. (1, 2) => (40, 80)
+    return (x * 40, y * 40)
 
 if __name__ == '__main__':
     main()
