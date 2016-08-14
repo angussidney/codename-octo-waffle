@@ -18,8 +18,6 @@ WINDOWHEIGHT = 600
 WINDOWCAPTION = "RPG Game"
 WINDOWICON = "icon.png"
 
-FONTSIZE = 20
-
 LEVELFILE = "levels.txt"
 
 
@@ -33,7 +31,7 @@ GREEN     = (  0, 255,   0)
 
 
 def main ():
-    global DISPLAY, FPSCLOCK, BASICFONT
+    global DISPLAY, FPSCLOCK, BASICFONT, PIXELFONT
 
     pygame.init()
 
@@ -47,12 +45,20 @@ def main ():
     FPSCLOCK = pygame.time.Clock()
 
     # Fonts
-    BASICFONT = pygame.font.Font('freesansbold.ttf', FONTSIZE)
+    BASICFONT = pygame.font.Font('freesansbold.ttf', 20)
+    PIXELFONT = pygame.font.Font('pixelart.ttf', 16)
 
     DISPLAY.fill(WHITE)
-    pygame.draw.rect(DISPLAY, RED, (0, 0, 600, 400))
-    pygame.draw.rect(DISPLAY, BLACK, (0, 0, 40, 40))
-    set_tile(1, 0, os.path.join('tiles', 'tile2.png'))
+    pygame.draw.rect(DISPLAY, BLACK, (0, 0, 600, 400))
+    pygame.draw.rect(DISPLAY, WHITE, (0, 0, 40, 40))
+    set_tile(1, 0, 'tile3')
+
+    set_tile(2, 0, 'styled_button_left')
+    set_tile(3, 0, 'styled_button_middle')
+    set_tile(4, 0, 'styled_button_middle')
+    set_tile(5, 0, 'styled_button_middle')
+    set_tile(6, 0, 'styled_button_right')
+    render_text_centered(4, 0, PIXELFONT, 'For the lolz', WHITE)
     
     while True: # main game loop
         for event in pygame.event.get():
@@ -154,22 +160,36 @@ class TitleScreen(SceneBase):
 
     def Render(self):
         DISPLAY.fill(BLACK)
-        
 
-def set_tile (x, y, image):
-    tile_img = pygame.image.load(image).convert_alpha()
-    DISPLAY.blit(tile_img, tile_to_pixel_coords(x, y))
+def tile (tile_name):
+    # Returns the filepath of a tile
+    return os.path.join('tiles', tile_name + '.png')
 
-def pixel_to_tile_coords (x, y):
+def set_tile (x, y, tile_img):
+    # Sets the tile at (x, y) to the designated image
+    tile_img = pygame.image.load(tile(tile_img)).convert_alpha()
+    DISPLAY.blit(tile_img, tile_to_pix(x, y))
+
+def pix_to_tile (x, y):
     # Converts pixel co-ordinates (x, y) to tile co-ordinates (x, y)
     # E.g. (36, 90) => (0, 2)
     # x+1 and y+1 so that (40, 40) is (1, 1) not (0, 0) 
     return (math.floor((x + 1) / 40), math.floor((y + 1) / 40))
 
-def tile_to_pixel_coords (x, y):
+def tile_to_pix (x, y):
     # Takes a tile co-ordinate and returns the top-left pixel co-ordinate
     # E.g. (1, 2) => (40, 80)
     return (x * 40, y * 40)
+
+def render_text_centered (x, y, font, text, color):
+    # Renders text centered on the given tile co-ordinate
+    text_surf = font.render(text, True, color)
+    text_rect = text_surf.get_rect()
+    pixel_coords = tile_to_pix(x, y)
+    adj_pixel_coords = (pixel_coords[0] + 20, pixel_coords[1] + 20)
+    text_rect.center = adj_pixel_coords
+    DISPLAY.blit(text_surf, text_rect)
+    
 
 if __name__ == '__main__':
     main()
