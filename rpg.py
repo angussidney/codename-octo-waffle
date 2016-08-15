@@ -18,7 +18,9 @@ WINDOWHEIGHT = 600
 WINDOWCAPTION = "RPG Game"
 WINDOWICON = "icon.png"
 
-LEVELFILE = "levels.txt"
+FPS = 30
+
+LEVELS = "levels.txt"
 
 
 # Colour      R    G    B   (A)
@@ -50,24 +52,22 @@ def main ():
 
     active_scene = TitleScreen()
 
-    DISPLAY.fill(WHITE)
-    pygame.draw.rect(DISPLAY, BLACK, (0, 0, 600, 400))
-    pygame.draw.rect(DISPLAY, WHITE, (0, 0, 40, 40))
-    set_tile(1, 0, 'tile3')
-
-    set_tile(2, 0, 'styled_button_left')
-    set_tile(3, 0, 'styled_button_middle')
-    set_tile(4, 0, 'styled_button_middle')
-    set_tile(5, 0, 'styled_button_middle')
-    set_tile(6, 0, 'styled_button_right')
-    render_text_centered(4, 0, PIXELFONT, 'For the lolz', WHITE)
+    # DISPLAY.fill(WHITE)
+    # pygame.draw.rect(DISPLAY, BLACK, (0, 0, 600, 400))
+    # ^ size of game scene - 15 x 10
     
     while True: # main game loop
-        active_scene.Render()
         for event in pygame.event.get():
             if event.type == QUIT:
                 terminate()
+        
+        active_scene.ProcessInput()
+        active_scene.Update()
+        active_scene.Render()
+        active_scene = active_scene.next
+        
         pygame.display.update()
+        FPSCLOCK.tick(FPS)
 
 def terminate():
     pygame.quit()
@@ -156,9 +156,15 @@ class TitleScreen(SceneBase):
         SceneBase.__init__(self)
     
     def ProcessInput(self):
-        pass
-        #mousex, mousey = pygame.mouse.get_pos()
-        #pressed = pygame.mouse.get_pressed()
+        pressed = pygame.mouse.get_pressed()
+        if mouse_between_tiles(5, 6, 9, 6) and pressed[0]: # Continue button
+            pass # self.next = Continue
+        if mouse_between_tiles(5, 8, 9, 8) and pressed[0]: # New Game button
+            pass # self.next = NewGame
+        if mouse_between_tiles(5, 10, 9, 10) and pressed[0]: # About button
+            self.next = About()
+        if mouse_between_tiles(5, 12, 9, 12) and pressed[0]: # Exit button
+            terminate()
 
     def Update(self):
         pass
@@ -191,7 +197,27 @@ class TitleScreen(SceneBase):
         set_tile(7, 12, 'styled_button_middle')
         set_tile(8, 12, 'styled_button_middle')
         set_tile(9, 12, 'styled_button_right')
-        render_text_centered(7, 12, PIXELFONT, 'Credits', WHITE)
+        render_text_centered(7, 12, PIXELFONT, 'Exit', WHITE)
+
+class About (SceneBase):
+    def __init__(self):
+        SceneBase.__init__(self)
+
+    def ProcessInput (self):
+        pressed = pygame.mouse.get_pressed()
+        if mouse_between_tiles(6, 1, 8, 1) and pressed[0]: # Back button
+            self.next = TitleScreen()
+
+    def Update (self):
+        pass
+
+    def Render (self):
+        DISPLAY.fill(BLACK)
+        set_tile(6, 1, 'styled_button_left')
+        set_tile(7, 1, 'styled_button_middle')
+        set_tile(8, 1, 'styled_button_right')
+        render_text_centered(7, 1, PIXELFONT, 'Back', WHITE)
+        render_text_centered(7, 8, PIXELFONT, 'This is a game \nby an awesome person \nwhose name is \nangus \nthis \nis \nexcessive', WHITE)
 
 def tile (tile_name):
     # Returns the filepath of a tile
@@ -213,14 +239,23 @@ def tile_to_pix (x, y):
     # E.g. (1, 2) => (40, 80)
     return (x * 40, y * 40)
 
+def adj_tile_to_pix (x, y, adj_x, adj_y):
+    return ((x * 40) + adj_x, (y * 40) + adj_y)
+
 def render_text_centered (x, y, font, text, color):
     # Renders text centered on the given tile co-ordinate
     text_surf = font.render(text, True, color)
     text_rect = text_surf.get_rect()
-    pixel_coords = tile_to_pix(x, y)
-    adj_pixel_coords = (pixel_coords[0] + 20, pixel_coords[1] + 20)
-    text_rect.center = adj_pixel_coords
+    text_rect.center = adj_tile_to_pix(x, y, 20, 20)
     DISPLAY.blit(text_surf, text_rect)
+
+def mouse_between_tiles (x1, y1, x2, y2):
+    mousex, mousey = pygame.mouse.get_pos()
+    top_left = tile_to_pix(x1, y1)
+    bottom_right = adj_tile_to_pix(x2, y2, 39, 39)
+    if mousex >= top_left[0] and mousex <= bottom_right[0] \
+       and mousey >= top_left[1] and mousey <= bottom_right[1]:
+        return True
     
 
 if __name__ == '__main__':
