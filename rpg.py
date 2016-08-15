@@ -48,6 +48,8 @@ def main ():
     BASICFONT = pygame.font.Font('freesansbold.ttf', 20)
     PIXELFONT = pygame.font.Font('pixelart.ttf', 16)
 
+    active_scene = TitleScreen()
+
     DISPLAY.fill(WHITE)
     pygame.draw.rect(DISPLAY, BLACK, (0, 0, 600, 400))
     pygame.draw.rect(DISPLAY, WHITE, (0, 0, 40, 40))
@@ -61,6 +63,7 @@ def main ():
     render_text_centered(4, 0, PIXELFONT, 'For the lolz', WHITE)
     
     while True: # main game loop
+        active_scene.Render()
         for event in pygame.event.get():
             if event.type == QUIT:
                 terminate()
@@ -82,7 +85,7 @@ class Character(object):
     }
     skills = {
         # 'skill': (is_proficient, base score),
-        'athletics': (False, 'strength'),
+            'athletics': (False, 'strength'),
         'acrobatics': (False, 'dex'),
         'sleight_of_hand': (False, 'dex'),
         'stealth': (False, 'dex'),
@@ -144,7 +147,7 @@ class SceneBase(object):
         # Game logic goes here
         raise NotImplementedError('Don\'t forget to override this in the child class!')
     
-    def Render(self, screen):
+    def Render(self):
         # Render to the main display object
         raise NotImplementedError('Don\'t forget to override this in the child class!')
 
@@ -154,12 +157,41 @@ class TitleScreen(SceneBase):
     
     def ProcessInput(self):
         pass
+        #mousex, mousey = pygame.mouse.get_pos()
+        #pressed = pygame.mouse.get_pressed()
 
     def Update(self):
         pass
 
     def Render(self):
         DISPLAY.fill(BLACK)
+        set_tile(5, 6, 'styled_button_left')
+        set_tile(6, 6, 'styled_button_middle')
+        set_tile(7, 6, 'styled_button_middle')
+        set_tile(8, 6, 'styled_button_middle')
+        set_tile(9, 6, 'styled_button_right')
+        render_text_centered(7, 6, PIXELFONT, 'Continue', WHITE)
+
+        set_tile(5, 8, 'styled_button_left')
+        set_tile(6, 8, 'styled_button_middle')
+        set_tile(7, 8, 'styled_button_middle')
+        set_tile(8, 8, 'styled_button_middle')
+        set_tile(9, 8, 'styled_button_right')
+        render_text_centered(7, 8, PIXELFONT, 'New Game', WHITE)
+
+        set_tile(5, 10, 'styled_button_left')
+        set_tile(6, 10, 'styled_button_middle')
+        set_tile(7, 10, 'styled_button_middle')
+        set_tile(8, 10, 'styled_button_middle')
+        set_tile(9, 10, 'styled_button_right')
+        render_text_centered(7, 10, PIXELFONT, 'About', WHITE)
+
+        set_tile(5, 12, 'styled_button_left')
+        set_tile(6, 12, 'styled_button_middle')
+        set_tile(7, 12, 'styled_button_middle')
+        set_tile(8, 12, 'styled_button_middle')
+        set_tile(9, 12, 'styled_button_right')
+        render_text_centered(7, 12, PIXELFONT, 'Credits', WHITE)
 
 def tile (tile_name):
     # Returns the filepath of a tile
