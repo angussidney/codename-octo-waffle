@@ -1,5 +1,6 @@
 ####################
 # Todo: credit pixel art font (cc-by-sa)
+# credit textrect function http://www.pygame.org/pcr/text_rect/index.php
 ####################
 
 import math
@@ -9,8 +10,10 @@ import os
 
 import pygame
 from pygame.locals import *
+from textrect import render_textrect, TextRectException
 
 import levels
+import monsters
 
 # All options for game
 WINDOWWIDTH = 600
@@ -42,7 +45,7 @@ def main ():
     pygame.display.set_caption(WINDOWCAPTION)
     icon = pygame.image.load(WINDOWICON)
     pygame.display.set_icon(icon)
-    
+
     # FPS
     FPSCLOCK = pygame.time.Clock()
 
@@ -55,98 +58,32 @@ def main ():
     # DISPLAY.fill(WHITE)
     # pygame.draw.rect(DISPLAY, BLACK, (0, 0, 600, 400))
     # ^ size of game scene - 15 x 10
-    
+
     while True: # main game loop
         for event in pygame.event.get():
             if event.type == QUIT:
                 terminate()
-        
+
         active_scene.ProcessInput()
         active_scene.Update()
         active_scene.Render()
         active_scene = active_scene.next
-        
+
         pygame.display.update()
         FPSCLOCK.tick(FPS)
-
-def terminate():
-    pygame.quit()
-    sys.exit()
-
-class Character(object):
-    proficiency_bonus = 2
-    scores = {
-        'strength': 10,
-        'dex': 10,
-        'con': 10,
-        'intelligence': 10,
-        'wis': 10,
-        'cha': 10
-    }
-    skills = {
-        # 'skill': (is_proficient, base score),
-            'athletics': (False, 'strength'),
-        'acrobatics': (False, 'dex'),
-        'sleight_of_hand': (False, 'dex'),
-        'stealth': (False, 'dex'),
-        'arcana': (False, 'intelligence'),
-        'history': (False, 'intelligence'),
-        'investigation': (False, 'intelligence'),
-        'nature': (False, 'intelligence'),
-        'religion': (False, 'intelligence'),
-        'animal_handling': (False, 'wis'),
-        'insight': (False, 'wis'),
-        'medicine': (False, 'wis'),
-        'perception': (False, 'wis'),
-        'survival': (False, 'wis'),
-        'deception': (False, 'cha'),
-        'intimidation': (False, 'cha'),
-        'performance': (False, 'cha'),
-        'persuasion': (False, 'cha')
-    }
-    saving_throws = {
-        'strength': False,
-        'dex': False,
-        'con': False,
-        'intelligence': False,
-        'wis': False,
-        'cha': False
-    }
-    def score_to_bonus (self, score):
-        return math.floor((self.scores[score] - 10) / 2)
-    def calculate_bonus (self, skill):
-        if self.skills[skill][0] == True:
-            return self.score_to_bonus(self.skills[skill][1]) + self.proficiency_bonus
-        else:
-            return self.score_to_bonus(self.skills[skill][1])
-
-class Goblin(object):
-    ac = 15
-    hp = 7
-    speed = 30
-    xp = 50
-    languages = ['Common', 'Goblin']
-    scores = {
-        'strength': 8,
-        'dex': 14,
-        'con': 10,
-        'intelligence': 10,
-        'wis': 8,
-        'cha': 8
-    }
 
 class SceneBase(object):
     def __init__(self):
         self.next = self
-    
+
     def ProcessInput(self, events):
         # Recieves all events that have happened since last frame
         raise NotImplementedError('Don\'t forget to override this in the child class!')
-    
+
     def Update(self):
         # Game logic goes here
         raise NotImplementedError('Don\'t forget to override this in the child class!')
-    
+
     def Render(self):
         # Render to the main display object
         raise NotImplementedError('Don\'t forget to override this in the child class!')
@@ -154,7 +91,7 @@ class SceneBase(object):
 class TitleScreen(SceneBase):
     def __init__(self):
         SceneBase.__init__(self)
-    
+
     def ProcessInput(self):
         pressed = pygame.mouse.get_pressed()
         if mouse_between_tiles(5, 6, 9, 6) and pressed[0]: # Continue button
@@ -217,7 +154,11 @@ class About (SceneBase):
         set_tile(7, 1, 'styled_button_middle')
         set_tile(8, 1, 'styled_button_right')
         render_text_centered(7, 1, PIXELFONT, 'Back', WHITE)
-        render_text_centered(7, 8, PIXELFONT, 'This is a game \nby an awesome person \nwhose name is \nangus \nthis \nis \nexcessive', WHITE)
+        ## TODO: REPLACE WITH SOMETHING MORE ELEGANT
+        text_surf = render_textrect('\'The Dungeons of Feymere\' is an RPG game written by angussidney. Some of the game is based on a simplified version of the rules contained in the DnD 5e SRD.\n\nThe source code of this program is released under the MIT license. See LICENSE.txt for details.', PIXELFONT, tiles_to_rect(2, 3, 12, 13), WHITE, 0)
+        text_rect = text_surf.get_rect()
+        text_rect.center = adj_tile_to_pix(7, 8, 20, 20)
+        DISPLAY.blit(text_surf, text_rect)
 
 def tile (tile_name):
     # Returns the filepath of a tile
@@ -231,7 +172,7 @@ def set_tile (x, y, tile_img):
 def pix_to_tile (x, y):
     # Converts pixel co-ordinates (x, y) to tile co-ordinates (x, y)
     # E.g. (36, 90) => (0, 2)
-    # x+1 and y+1 so that (40, 40) is (1, 1) not (0, 0) 
+    # x+1 and y+1 so that (40, 40) is (1, 1) not (0, 0)
     return (math.floor((x + 1) / 40), math.floor((y + 1) / 40))
 
 def tile_to_pix (x, y):
@@ -242,6 +183,13 @@ def tile_to_pix (x, y):
 def adj_tile_to_pix (x, y, adj_x, adj_y):
     return ((x * 40) + adj_x, (y * 40) + adj_y)
 
+def tiles_to_rect (x1, y1, x2, y2):
+    top_left = tile_to_pix(x1, y1)
+    bottom_right = adj_tile_to_pix(x2, y2, 39, 39)
+    width = bottom_right[0] - top_left[0]
+    height = bottom_right[1] - top_left[1]
+    return pygame.Rect(x1, y1, width, height)
+
 def render_text_centered (x, y, font, text, color):
     # Renders text centered on the given tile co-ordinate
     text_surf = font.render(text, True, color)
@@ -250,13 +198,65 @@ def render_text_centered (x, y, font, text, color):
     DISPLAY.blit(text_surf, text_rect)
 
 def mouse_between_tiles (x1, y1, x2, y2):
+    # Tests if the mouse is anywhere between any of the
     mousex, mousey = pygame.mouse.get_pos()
     top_left = tile_to_pix(x1, y1)
     bottom_right = adj_tile_to_pix(x2, y2, 39, 39)
     if mousex >= top_left[0] and mousex <= bottom_right[0] \
        and mousey >= top_left[1] and mousey <= bottom_right[1]:
         return True
-    
+
+def terminate():
+    # Exits pygame and closes the window properly
+    pygame.quit()
+    sys.exit()
+
+class Character(object):
+    proficiency_bonus = 2
+    scores = {
+        'strength': 10,
+        'dex': 10,
+        'con': 10,
+        'intelligence': 10,
+        'wis': 10,
+        'cha': 10
+    }
+    skills = {
+        # 'skill': (is_proficient, base score),
+            'athletics': (False, 'strength'),
+        'acrobatics': (False, 'dex'),
+        'sleight_of_hand': (False, 'dex'),
+        'stealth': (False, 'dex'),
+        'arcana': (False, 'intelligence'),
+        'history': (False, 'intelligence'),
+        'investigation': (False, 'intelligence'),
+        'nature': (False, 'intelligence'),
+        'religion': (False, 'intelligence'),
+        'animal_handling': (False, 'wis'),
+        'insight': (False, 'wis'),
+        'medicine': (False, 'wis'),
+        'perception': (False, 'wis'),
+        'survival': (False, 'wis'),
+        'deception': (False, 'cha'),
+        'intimidation': (False, 'cha'),
+        'performance': (False, 'cha'),
+        'persuasion': (False, 'cha')
+    }
+    saving_throws = {
+        'strength': False,
+        'dex': False,
+        'con': False,
+        'intelligence': False,
+        'wis': False,
+        'cha': False
+    }
+    def score_to_bonus (self, score):
+        return math.floor((self.scores[score] - 10) / 2)
+    def calculate_bonus (self, skill):
+        if self.skills[skill][0] == True:
+            return self.score_to_bonus(self.skills[skill][1]) + self.proficiency_bonus
+        else:
+            return self.score_to_bonus(self.skills[skill][1])
 
 if __name__ == '__main__':
     main()
