@@ -97,7 +97,7 @@ class TitleScreen(SceneBase):
         if mouse_between_tiles(5, 6, 9, 6) and pressed[0]: # Continue button
             pass # self.next = Continue
         if mouse_between_tiles(5, 8, 9, 8) and pressed[0]: # New Game button
-            pass # self.next = NewGame
+            self.next = CharacterCreation()
         if mouse_between_tiles(5, 10, 9, 10) and pressed[0]: # About button
             self.next = About()
         if mouse_between_tiles(5, 12, 9, 12) and pressed[0]: # Exit button
@@ -136,19 +136,19 @@ class TitleScreen(SceneBase):
         set_tile(9, 12, 'styled_button_right')
         render_text_centered(7, 12, PIXELFONT, 'Exit', WHITE)
 
-class About (SceneBase):
+class About(SceneBase):
     def __init__(self):
         SceneBase.__init__(self)
 
-    def ProcessInput (self):
+    def ProcessInput(self):
         pressed = pygame.mouse.get_pressed()
         if mouse_between_tiles(6, 1, 8, 1) and pressed[0]: # Back button
             self.next = TitleScreen()
 
-    def Update (self):
+    def Update(self):
         pass
 
-    def Render (self):
+    def Render(self):
         DISPLAY.fill(BLACK)
         set_tile(6, 1, 'styled_button_left')
         set_tile(7, 1, 'styled_button_middle')
@@ -159,6 +159,23 @@ class About (SceneBase):
         text_rect = text_surf.get_rect()
         text_rect.center = adj_tile_to_pix(7, 8, 20, 20)
         DISPLAY.blit(text_surf, text_rect)
+
+class CharacterCreation(SceneBase):
+    def __init__(self):
+        SceneBase.__init__(self)
+
+    def ProcessInput(self):
+        pass
+
+    def Update(self):
+        pass
+    
+    def Render(self):
+        DISPLAY.fill(BLACK)
+        for i in range(15):
+            set_tile(7, i, 'vertical_divider')
+        set_tile(7, 1, 'styled_button_right_arrow')
+        
 
 def tile (tile_name):
     # Returns the filepath of a tile
