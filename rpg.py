@@ -174,8 +174,16 @@ class CharacterCreation(SceneBase):
         DISPLAY.fill(BLACK)
         for i in range(15):
             set_tile(7, i, 'vertical_divider')
-        set_tile(7, 1, 'styled_button_right_arrow')
-        
+        # Cleric
+        set_tile(7, 5, 'styled_button_right_arrow')
+        # Wizard
+        set_tile(7, 7, 'styled_button_right_arrow')
+        # Ranger
+        set_tile(7, 9, 'styled_button_right_arrow')
+        # Fighter
+        set_tile(7, 11, 'styled_button_right_arrow')
+        # Rogue
+        set_tile(7, 13, 'styled_button_right_arrow')
 
 def tile (tile_name):
     # Returns the filepath of a tile
