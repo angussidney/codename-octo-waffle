@@ -1,12 +1,14 @@
 ####################
 # Todo: credit pixel art font (cc-by-sa)
 # credit textrect function http://www.pygame.org/pcr/text_rect/index.php
+# also: https://pymotw.com/2/shelve/
 ####################
 
 import math
 import random
 import sys
 import os
+import traceback
 
 import pygame
 from pygame.locals import *
@@ -18,12 +20,12 @@ import monsters
 # All options for game
 WINDOWWIDTH = 600
 WINDOWHEIGHT = 600
-WINDOWCAPTION = "RPG Game"
-WINDOWICON = "icon.png"
+WINDOWCAPTION = 'RPG Game'
+WINDOWICON = 'icon.png'
 
 FPS = 30
 
-LEVELS = "levels.txt"
+LEVELS = 'levels.txt'
 
 
 # Colour      R    G    B   (A)
@@ -63,12 +65,14 @@ def main ():
         for event in pygame.event.get():
             if event.type == QUIT:
                 terminate()
-
-        active_scene.ProcessInput()
-        active_scene.Update()
-        active_scene.Render()
-        active_scene = active_scene.next
-
+        try:
+            active_scene.ProcessInput()
+            active_scene.Update()
+            active_scene.Render()
+            active_scene = active_scene.next
+        except Exception: # Catch any errors and exit gracefully
+            traceback.print_exc()
+            terminate()
         pygame.display.update()
         FPSCLOCK.tick(FPS)
 
@@ -95,7 +99,7 @@ class TitleScreen(SceneBase):
     def ProcessInput(self):
         pressed = pygame.mouse.get_pressed()
         if mouse_between_tiles(5, 6, 9, 6) and pressed[0]: # Continue button
-            pass # self.next = Continue
+            self.next = CharacterCreation() # self.next = Continue
         if mouse_between_tiles(5, 8, 9, 8) and pressed[0]: # New Game button
             self.next = CharacterCreation()
         if mouse_between_tiles(5, 10, 9, 10) and pressed[0]: # About button
@@ -109,30 +113,30 @@ class TitleScreen(SceneBase):
     def Render(self):
         DISPLAY.fill(BLACK)
         set_tile(5, 6, 'styled_button_left')
-        set_tile(6, 6, 'styled_button_middle')
-        set_tile(7, 6, 'styled_button_middle')
-        set_tile(8, 6, 'styled_button_middle')
+        set_tile(6, 6, 'button_middle')
+        set_tile(7, 6, 'button_middle')
+        set_tile(8, 6, 'button_middle')
         set_tile(9, 6, 'styled_button_right')
         render_text_centered(7, 6, PIXELFONT, 'Continue', WHITE)
 
         set_tile(5, 8, 'styled_button_left')
-        set_tile(6, 8, 'styled_button_middle')
-        set_tile(7, 8, 'styled_button_middle')
-        set_tile(8, 8, 'styled_button_middle')
+        set_tile(6, 8, 'button_middle')
+        set_tile(7, 8, 'button_middle')
+        set_tile(8, 8, 'button_middle')
         set_tile(9, 8, 'styled_button_right')
         render_text_centered(7, 8, PIXELFONT, 'New Game', WHITE)
 
         set_tile(5, 10, 'styled_button_left')
-        set_tile(6, 10, 'styled_button_middle')
-        set_tile(7, 10, 'styled_button_middle')
-        set_tile(8, 10, 'styled_button_middle')
+        set_tile(6, 10, 'button_middle')
+        set_tile(7, 10, 'button_middle')
+        set_tile(8, 10, 'button_middle')
         set_tile(9, 10, 'styled_button_right')
         render_text_centered(7, 10, PIXELFONT, 'About', WHITE)
 
         set_tile(5, 12, 'styled_button_left')
-        set_tile(6, 12, 'styled_button_middle')
-        set_tile(7, 12, 'styled_button_middle')
-        set_tile(8, 12, 'styled_button_middle')
+        set_tile(6, 12, 'button_middle')
+        set_tile(7, 12, 'button_middle')
+        set_tile(8, 12, 'button_middle')
         set_tile(9, 12, 'styled_button_right')
         render_text_centered(7, 12, PIXELFONT, 'Exit', WHITE)
 
@@ -151,10 +155,10 @@ class About(SceneBase):
     def Render(self):
         DISPLAY.fill(BLACK)
         set_tile(6, 1, 'styled_button_left')
-        set_tile(7, 1, 'styled_button_middle')
+        set_tile(7, 1, 'button_middle')
         set_tile(8, 1, 'styled_button_right')
         render_text_centered(7, 1, PIXELFONT, 'Back', WHITE)
-        ## TODO: REPLACE WITH SOMETHING MORE ELEGANT
+        ## TODO: REPLACE WITH SOMETHING MORE ELEGANT AND MULTILINE STRING (brackets then standard string no comma)
         text_surf = render_textrect('\'The Dungeons of Feymere\' is an RPG game written by angussidney. Some of the game is based on a simplified version of the rules contained in the DnD 5e SRD.\n\nThe source code of this program is released under the MIT license. See LICENSE.txt for details.', PIXELFONT, tiles_to_rect(2, 3, 12, 13), WHITE, 0)
         text_rect = text_surf.get_rect()
         text_rect.center = adj_tile_to_pix(7, 8, 20, 20)
@@ -163,9 +167,62 @@ class About(SceneBase):
 class CharacterCreation(SceneBase):
     def __init__(self):
         SceneBase.__init__(self)
+        self.y = None
+        self.text = None
 
     def ProcessInput(self):
-        pass
+        pressed = pygame.mouse.get_pressed()
+        # Need help?
+        if mouse_between_tiles(1, 3, 5, 3) and pressed[0]:
+            #self.next = CharacterHelp()
+            pass
+        # Determine which character is currently being looked at
+        if mouse_between_tiles(1, 5, 6, 5): # Cleric
+            self.y = 5
+            self.text = ("Cleric\n"
+                         "stuff\n"
+                         "goes\n"
+                         "here\n")
+        if mouse_between_tiles(1, 7, 6, 7): # Wizard
+            self.y = 7
+            self.text = ("Wizard\n"
+                         "stuff\n"
+                         "goes\n"
+                         "here\n")
+        if mouse_between_tiles(1, 9, 6, 9): # Ranger
+            self.y = 9
+            self.text = ("Ranger\n"
+                         "stuff\n"
+                         "goes\n"
+                         "here\n")
+        if mouse_between_tiles(1, 11, 6, 11): # Fighter
+            self.y = 11
+            self.text = ("Fighter\n"
+                         "stuff\n"
+                         "goes\n"
+                         "here\n")
+        if mouse_between_tiles(1, 13, 6, 13): # Rogue
+            self.y = 13
+            self.text = ("Rogue\n"
+                         "stuff\n"
+                         "goes\n"
+                         "here\n")
+        # Determine if a character has been selected
+        if mouse_between_tiles(1, 5, 6, 5) and pressed[0]:
+            #self.next =
+            pass
+        if mouse_between_tiles(1, 7, 6, 7) and pressed[0]:
+            #self.next =
+            pass
+        if mouse_between_tiles(1, 9, 6, 9) and pressed[0]:
+            #self.next =
+            pass
+        if mouse_between_tiles(1, 11, 6, 11) and pressed[0]:
+            #self.next =
+            pass
+        if mouse_between_tiles(1, 13, 6, 13) and pressed[0]:
+            #self.next =
+            pass
 
     def Update(self):
         pass
@@ -173,17 +230,39 @@ class CharacterCreation(SceneBase):
     def Render(self):
         DISPLAY.fill(BLACK)
         for i in range(15):
-            set_tile(7, i, 'vertical_divider')
-        # Cleric
-        set_tile(7, 5, 'styled_button_right_arrow')
-        # Wizard
-        set_tile(7, 7, 'styled_button_right_arrow')
-        # Ranger
-        set_tile(7, 9, 'styled_button_right_arrow')
-        # Fighter
-        set_tile(7, 11, 'styled_button_right_arrow')
-        # Rogue
-        set_tile(7, 13, 'styled_button_right_arrow')
+            set_tile(6, i, 'vertical_divider')
+        # Instructions
+        text_surf = render_textrect(('Choose a character from the options below. '
+                                     'For more information, hover on a character.'), PIXELFONT, tiles_to_rect(1, 0, 5, 2), WHITE, 1)
+        text_rect = text_surf.get_rect()
+        text_rect.center = adj_tile_to_pix(3, 2, 20, 0)
+        DISPLAY.blit(text_surf, text_rect)
+        # Help me choose button
+        set_tile(1, 3, 'styled_button_left')
+        set_tile(2, 3, 'button_middle')
+        set_tile(3, 3, 'button_middle')
+        set_tile(4, 3, 'button_middle')
+        set_tile(5, 3, 'styled_button_right')
+        render_text_centered(3, 3, PIXELFONT, 'Help me choose', WHITE)
+        # Show information for current character
+        try:
+            set_tile(1, self.y, 'end_button_left')
+            set_tile(2, self.y, 'button_middle')
+            set_tile(3, self.y, 'button_middle')
+            set_tile(4, self.y, 'button_middle')
+            set_tile(5, self.y, 'button_middle')
+            set_tile(6, self.y, 'arrow_button_right')
+            text_surf = render_textrect(self.text, PIXELFONT, tiles_to_rect(7, 2, 13, 13), WHITE, 0)
+            text_rect = text_surf.get_rect()
+            text_rect.center = adj_tile_to_pix(10, 7, 20, 20)
+            DISPLAY.blit(text_surf, text_rect)
+        except Exception: # Do nothing if no character is selected yet
+            pass
+        render_text_centered(3, 5, PIXELFONT, 'Cleric', WHITE)
+        render_text_centered(3, 7, PIXELFONT, 'Wizard', WHITE)
+        render_text_centered(3, 9, PIXELFONT, 'Ranger', WHITE)
+        render_text_centered(3, 11, PIXELFONT, 'Fighter', WHITE)
+        render_text_centered(3, 13, PIXELFONT, 'Rogue', WHITE)
 
 def tile (tile_name):
     # Returns the filepath of a tile
