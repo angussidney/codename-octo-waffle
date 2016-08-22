@@ -9,6 +9,7 @@ import random
 import sys
 import os
 import traceback
+import shelve
 
 import pygame
 from pygame.locals import *
@@ -26,6 +27,7 @@ WINDOWICON = 'icon.png'
 FPS = 30
 
 LEVELS = 'levels.txt'
+SAVE = shelve.open('save', writeback=True)
 
 
 # Colour      R    G    B   (A)
@@ -99,9 +101,9 @@ class TitleScreen(SceneBase):
     def ProcessInput(self):
         pressed = pygame.mouse.get_pressed()
         if mouse_between_tiles(5, 6, 9, 6) and pressed[0]: # Continue button
-            self.next = CharacterCreation() # self.next = Continue
+            self.next = CharacterSelection() # self.next = Continue()
         if mouse_between_tiles(5, 8, 9, 8) and pressed[0]: # New Game button
-            self.next = CharacterCreation()
+            self.next = CharacterSelection()
         if mouse_between_tiles(5, 10, 9, 10) and pressed[0]: # About button
             self.next = About()
         if mouse_between_tiles(5, 12, 9, 12) and pressed[0]: # Exit button
@@ -164,7 +166,7 @@ class About(SceneBase):
         text_rect.center = adj_tile_to_pix(7, 8, 20, 20)
         DISPLAY.blit(text_surf, text_rect)
 
-class CharacterCreation(SceneBase):
+class CharacterSelection(SceneBase):
     def __init__(self):
         SceneBase.__init__(self)
         self.y = None
@@ -174,7 +176,7 @@ class CharacterCreation(SceneBase):
         pressed = pygame.mouse.get_pressed()
         # Need help?
         if mouse_between_tiles(1, 3, 5, 3) and pressed[0]:
-            #self.next = CharacterHelp()
+            self.next = CharacterHelp()
             pass
         # Determine which character is currently being looked at
         if mouse_between_tiles(1, 5, 6, 5): # Cleric
@@ -208,21 +210,26 @@ class CharacterCreation(SceneBase):
                          "goes\n"
                          "here\n")
         # Determine if a character has been selected
-        if mouse_between_tiles(1, 5, 6, 5) and pressed[0]:
+        if mouse_between_tiles(1, 5, 6, 5) and pressed[0]: # Cleric
+            SAVE['PC'] = 'Cleric'
+            SAVE.sync()
             #self.next =
-            pass
-        if mouse_between_tiles(1, 7, 6, 7) and pressed[0]:
+        if mouse_between_tiles(1, 7, 6, 7) and pressed[0]: # Wizard
+            SAVE['PC'] = 'Wizard'
+            SAVE.sync()
             #self.next =
-            pass
-        if mouse_between_tiles(1, 9, 6, 9) and pressed[0]:
+        if mouse_between_tiles(1, 9, 6, 9) and pressed[0]: # Ranger
+            SAVE['PC'] = 'Ranger'
+            SAVE.sync()
             #self.next =
-            pass
-        if mouse_between_tiles(1, 11, 6, 11) and pressed[0]:
+        if mouse_between_tiles(1, 11, 6, 11) and pressed[0]: # Fighter
+            SAVE['PC'] = 'Fighter'
+            SAVE.sync()
             #self.next =
-            pass
-        if mouse_between_tiles(1, 13, 6, 13) and pressed[0]:
+        if mouse_between_tiles(1, 13, 6, 13) and pressed[0]: # Rogue
+            SAVE['PC'] = 'Rogue'
+            SAVE.sync()
             #self.next =
-            pass
 
     def Update(self):
         pass
@@ -233,7 +240,7 @@ class CharacterCreation(SceneBase):
             set_tile(6, i, 'vertical_divider')
         # Instructions
         text_surf = render_textrect(('Choose a character from the options below. '
-                                     'For more information, hover on a character.'), PIXELFONT, tiles_to_rect(1, 0, 5, 2), WHITE, 1)
+                                     'Hover for more info.'), PIXELFONT, tiles_to_rect(1, 0, 5, 2), WHITE, 1)
         text_rect = text_surf.get_rect()
         text_rect.center = adj_tile_to_pix(3, 2, 20, 0)
         DISPLAY.blit(text_surf, text_rect)
@@ -263,6 +270,25 @@ class CharacterCreation(SceneBase):
         render_text_centered(3, 9, PIXELFONT, 'Ranger', WHITE)
         render_text_centered(3, 11, PIXELFONT, 'Fighter', WHITE)
         render_text_centered(3, 13, PIXELFONT, 'Rogue', WHITE)
+
+class CharacterHelp(SceneBase):
+    def __init__(self):
+        SceneBase.__init__(self)
+
+    def ProcessInput(self):
+        pressed = pygame.mouse.get_pressed()
+        if mouse_between_tiles(6, 1, 8, 1) and pressed[0]: # Back button
+            self.next = CharacterSelection()
+
+    def Update(self):
+        pass
+
+    def Render(self):
+        DISPLAY.fill(BLACK)
+        set_tile(6, 1, 'styled_button_left')
+        set_tile(7, 1, 'button_middle')
+        set_tile(8, 1, 'styled_button_right')
+        render_text_centered(7, 1, PIXELFONT, 'Back', WHITE)
 
 def tile (tile_name):
     # Returns the filepath of a tile
@@ -312,6 +338,7 @@ def mouse_between_tiles (x1, y1, x2, y2):
 
 def terminate():
     # Exits pygame and closes the window properly
+    SAVE.close()
     pygame.quit()
     sys.exit()
 
