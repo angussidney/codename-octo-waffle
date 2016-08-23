@@ -16,7 +16,8 @@ from pygame.locals import *
 from textrect import render_textrect, TextRectException
 
 import levels
-import monsters
+from monsters import *
+from characters import *
 
 # All options for game
 WINDOWWIDTH = 600
@@ -26,7 +27,6 @@ WINDOWICON = 'icon.png'
 
 FPS = 30
 
-LEVELS = 'levels.txt'
 SAVE = shelve.open('save', writeback=True)
 
 
@@ -211,25 +211,25 @@ class CharacterSelection(SceneBase):
                          "here\n")
         # Determine if a character has been selected
         if mouse_between_tiles(1, 5, 6, 5) and pressed[0]: # Cleric
-            SAVE['PC'] = 'Cleric'
+            SAVE['PC'] = Cleric()
             SAVE.sync()
-            #self.next =
+            #self.next = Introduction()
         if mouse_between_tiles(1, 7, 6, 7) and pressed[0]: # Wizard
-            SAVE['PC'] = 'Wizard'
+            SAVE['PC'] = Wizard()
             SAVE.sync()
-            #self.next =
+            #self.next = Introduction()
         if mouse_between_tiles(1, 9, 6, 9) and pressed[0]: # Ranger
-            SAVE['PC'] = 'Ranger'
+            SAVE['PC'] = Ranger()
             SAVE.sync()
-            #self.next =
+            #self.next = Introduction()
         if mouse_between_tiles(1, 11, 6, 11) and pressed[0]: # Fighter
-            SAVE['PC'] = 'Fighter'
+            SAVE['PC'] = Fighter()
             SAVE.sync()
-            #self.next =
+            #self.next = Introduction()
         if mouse_between_tiles(1, 13, 6, 13) and pressed[0]: # Rogue
-            SAVE['PC'] = 'Rogue'
+            SAVE['PC'] = Rogue()
             SAVE.sync()
-            #self.next =
+            #self.next = Introduction()
 
     def Update(self):
         pass
@@ -289,6 +289,15 @@ class CharacterHelp(SceneBase):
         set_tile(7, 1, 'button_middle')
         set_tile(8, 1, 'styled_button_right')
         render_text_centered(7, 1, PIXELFONT, 'Back', WHITE)
+        text_surf = render_textrect(('STRENGTH determines your physical prowess and the bonuses you get when fighting with melee weapons.\n\n'
+                                     'DEXTERITY determines your balance and manoeuvrability, and the bonuses you get when fighting with ranged or finesse weapons.\n\n'
+                                     'CONSTITUTION determines your characters \'toughness\'\n\n'
+                                     'INTELLIGENCE determines your overall knowledge, and is the spellcasting ability for Wizards\n\n'
+                                     'WISDOM determines your insightfulness and perceptiveness, and is the spellcasting ability for Clerics and Rangers\n\n'
+                                     'CHARISMA determines your characters personality and skill in social activities\n\n'), PIXELFONT, tiles_to_rect(1, 3, 13, 13), WHITE, 0)
+        text_rect = text_surf.get_rect()
+        text_rect.center = adj_tile_to_pix(7, 8, 20, 20)
+        DISPLAY.blit(text_surf, text_rect)
 
 def tile (tile_name):
     # Returns the filepath of a tile
@@ -341,53 +350,6 @@ def terminate():
     SAVE.close()
     pygame.quit()
     sys.exit()
-
-class Character(object):
-    proficiency_bonus = 2
-    scores = {
-        'strength': 10,
-        'dex': 10,
-        'con': 10,
-        'intelligence': 10,
-        'wis': 10,
-        'cha': 10
-    }
-    skills = {
-        # 'skill': (is_proficient, base score),
-            'athletics': (False, 'strength'),
-        'acrobatics': (False, 'dex'),
-        'sleight_of_hand': (False, 'dex'),
-        'stealth': (False, 'dex'),
-        'arcana': (False, 'intelligence'),
-        'history': (False, 'intelligence'),
-        'investigation': (False, 'intelligence'),
-        'nature': (False, 'intelligence'),
-        'religion': (False, 'intelligence'),
-        'animal_handling': (False, 'wis'),
-        'insight': (False, 'wis'),
-        'medicine': (False, 'wis'),
-        'perception': (False, 'wis'),
-        'survival': (False, 'wis'),
-        'deception': (False, 'cha'),
-        'intimidation': (False, 'cha'),
-        'performance': (False, 'cha'),
-        'persuasion': (False, 'cha')
-    }
-    saving_throws = {
-        'strength': False,
-        'dex': False,
-        'con': False,
-        'intelligence': False,
-        'wis': False,
-        'cha': False
-    }
-    def score_to_bonus (self, score):
-        return math.floor((self.scores[score] - 10) / 2)
-    def calculate_bonus (self, skill):
-        if self.skills[skill][0] == True:
-            return self.score_to_bonus(self.skills[skill][1]) + self.proficiency_bonus
-        else:
-            return self.score_to_bonus(self.skills[skill][1])
 
 if __name__ == '__main__':
     main()
