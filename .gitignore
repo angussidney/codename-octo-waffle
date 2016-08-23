@@ -21,3 +21,8 @@ $RECYCLE.BIN/
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Save files
+*.bak
+*.dat
+*.dir
