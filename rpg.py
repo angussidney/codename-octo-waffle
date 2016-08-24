@@ -114,6 +114,10 @@ class TitleScreen(SceneBase):
 
     def Render(self):
         DISPLAY.fill(BLACK)
+
+        tile_img = pygame.image.load(tile('titlescreen')).convert_alpha()
+        DISPLAY.blit(tile_img, adj_tile_to_pix(3, 1, 30, 0))
+        
         set_tile(5, 6, 'styled_button_left')
         set_tile(6, 6, 'button_middle')
         set_tile(7, 6, 'button_middle')
@@ -298,6 +302,25 @@ class CharacterHelp(SceneBase):
         text_rect = text_surf.get_rect()
         text_rect.center = adj_tile_to_pix(7, 8, 20, 20)
         DISPLAY.blit(text_surf, text_rect)
+
+class Introduction(SceneBase):
+    def __init__(self):
+        SceneBase.__init__(self)
+
+    def ProcessInput(self):
+        pressed = pygame.mouse.get_pressed()
+        if mouse_between_tiles(6, 1, 8, 1) and pressed[0]: # Back button
+            self.next = One()
+    
+    def Update(self):
+        pass
+
+    def Render(self):
+        DISPLAY.fill(BLACK)
+        set_tile(6, 1, 'styled_button_left')
+        set_tile(7, 1, 'button_middle')
+        set_tile(8, 1, 'styled_button_right')
+        render_text_centered(7, 1, PIXELFONT, 'Continue', WHITE)
 
 def tile (tile_name):
     # Returns the filepath of a tile
