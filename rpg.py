@@ -32,15 +32,15 @@ SAVE = shelve.open('save', writeback=True)
 
 # Colour      R    G    B   (A)
 # ==============================
-WHITE     = (255, 255, 255)
-BLACK     = (  0,   0,   0)
-RED       = (255,   0,   0)
-BLUE      = (  0,   0, 255)
-GREEN     = (  0, 255,   0)
+WHITE      = (255, 255, 255)
+BLACK      = (  0,   0,   0)
+RED        = (255,   0,   0)
+BLUE       = (  0,   0, 255)
+LIGHTGREEN = (137, 199,  94)
 
 
 def main ():
-    global DISPLAY, FPSCLOCK, BASICFONT, PIXELFONT
+    global DISPLAY, FPSCLOCK, BASICFONT, PIXELFONT, PIXELFONTLARGE
 
     pygame.init()
 
@@ -56,6 +56,7 @@ def main ():
     # Fonts
     BASICFONT = pygame.font.Font('freesansbold.ttf', 20)
     PIXELFONT = pygame.font.Font('pixelart.ttf', 16)
+    PIXELFONTLARGE = pygame.font.Font('pixelart.ttf', 32)
 
     active_scene = TitleScreen()
 
@@ -117,6 +118,10 @@ class TitleScreen(SceneBase):
 
         tile_img = pygame.image.load(tile('titlescreen')).convert_alpha()
         DISPLAY.blit(tile_img, adj_tile_to_pix(3, 1, 30, 0))
+        render_text_centered(6, 1, PIXELFONT, 'The', LIGHTGREEN)
+        render_text_centered(6.5, 2, PIXELFONTLARGE, 'Dungeons', LIGHTGREEN)
+        render_text_centered(7, 3, PIXELFONT, 'Of', LIGHTGREEN)
+        render_text_centered(8, 4, PIXELFONTLARGE, 'Feymere', LIGHTGREEN)
         
         set_tile(5, 6, 'styled_button_left')
         set_tile(6, 6, 'button_middle')
@@ -215,25 +220,25 @@ class CharacterSelection(SceneBase):
                          "here\n")
         # Determine if a character has been selected
         if mouse_between_tiles(1, 5, 6, 5) and pressed[0]: # Cleric
-            SAVE['PC'] = Cleric()
+            #SAVE['PC'] = Cleric()
             SAVE.sync()
-            #self.next = Introduction()
+            self.next = Introduction()
         if mouse_between_tiles(1, 7, 6, 7) and pressed[0]: # Wizard
-            SAVE['PC'] = Wizard()
+            #SAVE['PC'] = Wizard()
             SAVE.sync()
-            #self.next = Introduction()
+            self.next = Introduction()
         if mouse_between_tiles(1, 9, 6, 9) and pressed[0]: # Ranger
-            SAVE['PC'] = Ranger()
+            #SAVE['PC'] = Ranger()
             SAVE.sync()
-            #self.next = Introduction()
+            self.next = Introduction()
         if mouse_between_tiles(1, 11, 6, 11) and pressed[0]: # Fighter
-            SAVE['PC'] = Fighter()
+            #SAVE['PC'] = Fighter()
             SAVE.sync()
-            #self.next = Introduction()
+            self.next = Introduction()
         if mouse_between_tiles(1, 13, 6, 13) and pressed[0]: # Rogue
-            SAVE['PC'] = Rogue()
+            #SAVE['PC'] = Rogue()
             SAVE.sync()
-            #self.next = Introduction()
+            self.next = Introduction()
 
     def Update(self):
         pass
@@ -310,7 +315,7 @@ class Introduction(SceneBase):
     def ProcessInput(self):
         pressed = pygame.mouse.get_pressed()
         if mouse_between_tiles(6, 1, 8, 1) and pressed[0]: # Back button
-            self.next = One()
+            self.next = Sc1GoblinAttack()
     
     def Update(self):
         pass
