@@ -10,6 +10,7 @@ import sys
 import os
 import traceback
 import shelve
+from send2trash import *
 
 import pygame
 from pygame.locals import *
@@ -27,6 +28,10 @@ WINDOWICON = 'icon.png'
 
 FPS = 30
 
+#Start with a clean save until proper system is implemented
+send2trash('save.bak')
+send2trash('save.dat')
+send2trash('save.dir')
 SAVE = shelve.open('save', writeback=True)
 
 
@@ -314,7 +319,7 @@ class Introduction(SceneBase):
 
     def ProcessInput(self):
         pressed = pygame.mouse.get_pressed()
-        if mouse_between_tiles(6, 1, 8, 1) and pressed[0]: # Back button
+        if mouse_between_tiles(5, 10, 9, 10) and pressed[0]: # Back button
             self.next = Sc1GoblinAttack()
     
     def Update(self):
@@ -322,10 +327,23 @@ class Introduction(SceneBase):
 
     def Render(self):
         DISPLAY.fill(BLACK)
-        set_tile(6, 1, 'styled_button_left')
-        set_tile(7, 1, 'button_middle')
-        set_tile(8, 1, 'styled_button_right')
-        render_text_centered(7, 1, PIXELFONT, 'Continue', WHITE)
+        set_tile(5, 10, 'styled_button_left')
+        set_tile(6, 10, 'button_middle')
+        set_tile(7, 10, 'button_middle')
+        set_tile(8, 10, 'button_middle')
+        set_tile(9, 10, 'styled_button_right')
+        render_text_centered(7, 10, PIXELFONT, 'Continue', WHITE)
+        text_surf = render_textrect(('Bob McBobface, a noble from the city of Durin is paying you '
+                                     'and your party TEN gold pieces each to escort him to the town '
+                                     'of Feymere. Payment will only be delivered upon safe arrival '
+                                     'at Feymere.\n\n'
+                                     'You left Durin in the early hours of second day morning. The '
+                                     'story begins approximately half way through the second day of '
+                                     'travelling...'), PIXELFONT, tiles_to_rect(1, 1, 9, 5), WHITE, 1).convert_alpha()
+        text_rect = text_surf.get_rect()
+        text_rect.topleft = tile_to_pix(3, 4)
+        DISPLAY.blit(text_surf, text_rect)
+        
 
 def tile (tile_name):
     # Returns the filepath of a tile
@@ -375,6 +393,7 @@ def mouse_between_tiles (x1, y1, x2, y2):
 
 def terminate():
     # Exits pygame and closes the window properly
+    # TODO: allow to exit with custom error
     SAVE.close()
     pygame.quit()
     sys.exit()
