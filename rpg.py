@@ -345,6 +345,7 @@ class Introduction(SceneBase):
         DISPLAY.blit(text_surf, text_rect)
         
 
+
 def tile (tile_name):
     # Returns the filepath of a tile
     return os.path.join('tiles', tile_name + '.png')
