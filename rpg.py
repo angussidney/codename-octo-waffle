@@ -29,9 +29,12 @@ WINDOWICON = 'icon.png'
 FPS = 30
 
 #Start with a clean save until proper system is implemented
-send2trash('save.bak')
-send2trash('save.dat')
-send2trash('save.dir')
+try:
+    send2trash('save.bak')
+    send2trash('save.dat')
+    send2trash('save.dir')
+except:
+    traceback.print_exc()
 SAVE = shelve.open('save', writeback=True)
 
 
@@ -344,7 +347,22 @@ class Introduction(SceneBase):
         text_rect.topleft = tile_to_pix(3, 4)
         DISPLAY.blit(text_surf, text_rect)
         
+class Sc1GoblinAttack(SceneBase):
+    def __init__(self):
+        SceneBase.__init__(self)
 
+    def ProcessInput(self):
+        pass
+
+    def Update(self):
+        pass
+
+    def Render(self):
+        DISPLAY.fill(BLACK)
+        set_tile(0, 10, 'controls_background')
+        for i in range(1, 14):
+            for j in range (11, 14):
+                set_tile(i, j, 'vertical_divider')
 
 def tile (tile_name):
     # Returns the filepath of a tile

@@ -1,3 +1,6 @@
+import math
+import random
+
 class Character(object):
     proficiency_bonus = 2
     def score_to_bonus(self, score):
@@ -64,5 +67,3 @@ class Fighter(Character):
         'greatsword': random.randint(1, 6) + random.randint(1, 6)
         # chain mail, martial weapon + shield, light crossbow + 20 bolts, dungeoneer's pack
     }
-    hp = 10 + score_to_bonus('con')
-    ac = 18 # Chain mail fixed + shield
