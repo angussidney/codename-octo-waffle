@@ -28,12 +28,14 @@ WINDOWICON = 'icon.png'
 
 FPS = 30
 
+SPELLCASTER = False
+
 #Start with a clean save until proper system is implemented
 try:
     send2trash('save.bak')
     send2trash('save.dat')
     send2trash('save.dir')
-except:
+except Exception:
     traceback.print_exc()
 SAVE = shelve.open('save', writeback=True)
 
@@ -132,30 +134,30 @@ class TitleScreen(SceneBase):
         render_text_centered(8, 4, PIXELFONTLARGE, 'Feymere', LIGHTGREEN)
         
         set_tile(5, 6, 'styled_button_left')
-        set_tile(6, 6, 'button_middle')
-        set_tile(7, 6, 'button_middle')
-        set_tile(8, 6, 'button_middle')
+        set_tile(6, 6, 'button_middle_green')
+        set_tile(7, 6, 'button_middle_green')
+        set_tile(8, 6, 'button_middle_green')
         set_tile(9, 6, 'styled_button_right')
         render_text_centered(7, 6, PIXELFONT, 'Continue', WHITE)
 
         set_tile(5, 8, 'styled_button_left')
-        set_tile(6, 8, 'button_middle')
-        set_tile(7, 8, 'button_middle')
-        set_tile(8, 8, 'button_middle')
+        set_tile(6, 8, 'button_middle_green')
+        set_tile(7, 8, 'button_middle_green')
+        set_tile(8, 8, 'button_middle_green')
         set_tile(9, 8, 'styled_button_right')
         render_text_centered(7, 8, PIXELFONT, 'New Game', WHITE)
 
         set_tile(5, 10, 'styled_button_left')
-        set_tile(6, 10, 'button_middle')
-        set_tile(7, 10, 'button_middle')
-        set_tile(8, 10, 'button_middle')
+        set_tile(6, 10, 'button_middle_green')
+        set_tile(7, 10, 'button_middle_green')
+        set_tile(8, 10, 'button_middle_green')
         set_tile(9, 10, 'styled_button_right')
         render_text_centered(7, 10, PIXELFONT, 'About', WHITE)
 
         set_tile(5, 12, 'styled_button_left')
-        set_tile(6, 12, 'button_middle')
-        set_tile(7, 12, 'button_middle')
-        set_tile(8, 12, 'button_middle')
+        set_tile(6, 12, 'button_middle_green')
+        set_tile(7, 12, 'button_middle_green')
+        set_tile(8, 12, 'button_middle_green')
         set_tile(9, 12, 'styled_button_right')
         render_text_centered(7, 12, PIXELFONT, 'Exit', WHITE)
 
@@ -174,7 +176,7 @@ class About(SceneBase):
     def Render(self):
         DISPLAY.fill(BLACK)
         set_tile(6, 1, 'styled_button_left')
-        set_tile(7, 1, 'button_middle')
+        set_tile(7, 1, 'button_middle_green')
         set_tile(8, 1, 'styled_button_right')
         render_text_centered(7, 1, PIXELFONT, 'Back', WHITE)
         ## TODO: REPLACE WITH SOMETHING MORE ELEGANT AND MULTILINE STRING (brackets then standard string no comma)
@@ -263,18 +265,18 @@ class CharacterSelection(SceneBase):
         DISPLAY.blit(text_surf, text_rect)
         # Help me choose button
         set_tile(1, 3, 'styled_button_left')
-        set_tile(2, 3, 'button_middle')
-        set_tile(3, 3, 'button_middle')
-        set_tile(4, 3, 'button_middle')
+        set_tile(2, 3, 'button_middle_green')
+        set_tile(3, 3, 'button_middle_green')
+        set_tile(4, 3, 'button_middle_green')
         set_tile(5, 3, 'styled_button_right')
         render_text_centered(3, 3, PIXELFONT, 'Help me choose', WHITE)
         # Show information for current character
         try:
-            set_tile(1, self.y, 'end_button_left')
-            set_tile(2, self.y, 'button_middle')
-            set_tile(3, self.y, 'button_middle')
-            set_tile(4, self.y, 'button_middle')
-            set_tile(5, self.y, 'button_middle')
+            set_tile(1, self.y, 'end_button_left_green')
+            set_tile(2, self.y, 'button_middle_green')
+            set_tile(3, self.y, 'button_middle_green')
+            set_tile(4, self.y, 'button_middle_green')
+            set_tile(5, self.y, 'button_middle_green')
             set_tile(6, self.y, 'arrow_button_right')
             text_surf = render_textrect(self.text, PIXELFONT, tiles_to_rect(7, 2, 13, 13), WHITE, 0)
             text_rect = text_surf.get_rect()
@@ -303,7 +305,7 @@ class CharacterHelp(SceneBase):
     def Render(self):
         DISPLAY.fill(BLACK)
         set_tile(6, 1, 'styled_button_left')
-        set_tile(7, 1, 'button_middle')
+        set_tile(7, 1, 'button_middle_green')
         set_tile(8, 1, 'styled_button_right')
         render_text_centered(7, 1, PIXELFONT, 'Back', WHITE)
         text_surf = render_textrect(('STRENGTH determines your physical prowess and the bonuses you get when fighting with melee weapons.\n\n'
@@ -331,9 +333,9 @@ class Introduction(SceneBase):
     def Render(self):
         DISPLAY.fill(BLACK)
         set_tile(5, 10, 'styled_button_left')
-        set_tile(6, 10, 'button_middle')
-        set_tile(7, 10, 'button_middle')
-        set_tile(8, 10, 'button_middle')
+        set_tile(6, 10, 'button_middle_green')
+        set_tile(7, 10, 'button_middle_green')
+        set_tile(8, 10, 'button_middle_green')
         set_tile(9, 10, 'styled_button_right')
         render_text_centered(7, 10, PIXELFONT, 'Continue', WHITE)
         text_surf = render_textrect(('Bob McBobface, a noble from the city of Durin is paying you '
@@ -360,9 +362,31 @@ class Sc1GoblinAttack(SceneBase):
     def Render(self):
         DISPLAY.fill(BLACK)
         set_tile(0, 10, 'controls_background')
-        for i in range(1, 14):
-            for j in range (11, 14):
-                set_tile(i, j, 'vertical_divider')
+        
+        set_tile(1, 11, 'end_button_left_red')
+        set_tile(2, 11, 'button_middle_red')
+        set_tile(3, 11, 'end_button_right_red')
+        render_text_centered(2, 11, PIXELFONT, 'ATTACK', BLACK)
+        
+        if SPELLCASTER == True:
+            set_tile(1, 13, 'end_button_left_blue')
+            set_tile(2, 13, 'button_middle_blue')
+            set_tile(3, 13, 'end_button_right_blue')
+        else:
+            set_tile(1, 13, 'end_button_left_grey')
+            set_tile(2, 13, 'button_middle_grey')
+            set_tile(3, 13, 'end_button_right_grey')
+        render_text_centered(2, 13, PIXELFONT, 'Spells', WHITE)
+
+        set_tile(5, 11, 'end_button_left_blue')
+        set_tile(6, 11, 'button_middle_blue')
+        set_tile(7, 11, 'end_button_right_blue')
+        render_text_centered(6, 11, PIXELFONT, 'Actions', WHITE)
+
+        set_tile(5, 13, 'end_button_left_blue')
+        set_tile(6, 13, 'button_middle_blue')
+        set_tile(7, 13, 'end_button_right_blue')
+        render_text_centered(6, 13, PIXELFONT, 'Talk', WHITE)
 
 def tile (tile_name):
     # Returns the filepath of a tile
