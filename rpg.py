@@ -388,6 +388,11 @@ class Sc1GoblinAttack(SceneBase):
         set_tile(7, 13, 'end_button_right_blue')
         render_text_centered(6, 13, PIXELFONT, 'Talk', WHITE)
 
+        # Draw scene
+        for x in range(len(levels.scene1tiles)):
+            if levels.scene1tiles[x][0] == 't':
+                set_tile(x, 0, 'tree'+str(levels.scene1tiles[x][1]))
+
 def tile (tile_name):
     # Returns the filepath of a tile
     return os.path.join('tiles', tile_name + '.png')
