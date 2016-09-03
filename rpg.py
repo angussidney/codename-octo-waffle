@@ -16,7 +16,7 @@ import pygame
 from pygame.locals import *
 from textrect import render_textrect, TextRectException
 
-import levels
+from levels import *
 from monsters import *
 from characters import *
 
@@ -36,7 +36,7 @@ try:
     send2trash('save.dat')
     send2trash('save.dir')
 except Exception:
-    traceback.print_exc()
+    print('Error: A save file could not be found. Which is good, since it was going to be deleted anyway :)')
 SAVE = shelve.open('save', writeback=True)
 
 
@@ -388,10 +388,13 @@ class Sc1GoblinAttack(SceneBase):
         set_tile(7, 13, 'end_button_right_blue')
         render_text_centered(6, 13, PIXELFONT, 'Talk', WHITE)
 
-        # Draw scene
-        for x in range(len(levels.scene1tiles)):
-            if levels.scene1tiles[x][0] == 't':
-                set_tile(x, 0, 'tree'+str(levels.scene1tiles[x][1]))
+        draw_scene(scene1)
+        
+        
+
+### ----------------- ###
+### UTILITY FUNCTIONS ###
+### ----------------- ###
 
 def tile (tile_name):
     # Returns the filepath of a tile
@@ -439,12 +442,44 @@ def mouse_between_tiles (x1, y1, x2, y2):
        and mousey >= top_left[1] and mousey <= bottom_right[1]:
         return True
 
-def terminate():
+def terminate ():
     # Exits pygame and closes the window properly
     # TODO: allow to exit with custom error
     SAVE.close()
     pygame.quit()
     sys.exit()
+
+### --------------- ###
+### OTHER FUNCTIONS ###
+### --------------- ###
+
+def draw_scene (scene):
+    # Draw background tiles
+    for y in range(len(scene['tiles'])):
+        for x in range(len(scene['tiles'][y])):
+            if scene['tiles'][y][x] == 'g':
+                set_tile(x, y, 'grass')
+            if scene['tiles'][y][x] == 'gr':
+                set_tile(x, y, 'grass_road')
+            if scene['tiles'][y][x] == 'rg':
+                set_tile(x, y, 'road_grass')
+            if scene['tiles'][y][x] == 'r':
+                set_tile(x, y, 'road')
+
+    # Draw foreground objects
+    for y in range(len(scene['objects'])):
+        for x in range(len(scene['objects'][y])):
+            if scene['objects'][y][x] == 't1':
+                set_tile(x, y, 'tree1')
+            if scene['objects'][y][x] == 't2':
+                set_tile(x, y, 'tree2')
+            if scene['objects'][y][x] == 't3':
+                set_tile(x, y, 'tree3')
+            if scene['objects'][y][x] == 't4':
+                set_tile(x, y, 'tree4')
+
+    # Draw border
+    pygame.draw.rect(DISPLAY, BLACK, (0, 0, 599, 399), 2)
 
 if __name__ == '__main__':
     main()

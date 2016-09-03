@@ -7,19 +7,42 @@ Please accompany with a .png image with the same name
 1 - difficult terrain
 0 - normal ground
 """
+import random
 
 def t ():
-    return ('t', random.randint(1, 4))
+    # Trees
+    # Returns t1, t2, t3, or t4 (random)
+    return 't' + str(random.randint(1, 4))
 
-scene1terrain = [[2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2],
-          [2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2],
-          [2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2],
-          [2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2],
-          [2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2],
-          [2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2],
-          [2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2],
-          [2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2],
-          [2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2],
-          [2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2]]
-
-scene1tiles = [t(), t(), t(), t(), t(), t(), t(), t(), t(), t(), t(), t(), t(), t(), t()]
+scene1 = {
+    'movement': [[2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2],
+                 [2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2],
+                 [2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2],
+                 [2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2],
+                 [2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2],
+                 [2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2],
+                 [2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2],
+                 [2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2],
+                 [2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2],
+                 [2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2]],
+    'objects': [[t(), t(), None, None, None, None, None, None, None, None, None, None, None, t(), t()],
+                [t(), t(), None, None, None, None, None, None, None, None, None, None, None, t(), t()],
+                [t(), t(), None, None, None, None, None, None, None, None, None, None, None, t(), t()],
+                [t(), t(), None, None, None, None, None, None, None, None, None, None, None, t(), t()],
+                [t(), t(), None, None, None, None, None, None, None, None, None, None, None, t(), t()],
+                [t(), t(), None, None, None, None, None, None, None, None, None, None, None, t(), t()],
+                [t(), t(), None, None, None, None, None, None, None, None, None, None, None, t(), t()],
+                [t(), t(), None, None, None, None, None, None, None, None, None, None, None, t(), t()],
+                [t(), t(), None, None, None, None, None, None, None, None, None, None, None, t(), t()],
+                [t(), t(), None, None, None, None, None, None, None, None, None, None, None, t(), t()]],
+    'tiles': [['g', 'g', 'g', 'g', 'gr', 'r', 'r', 'r', 'r', 'r', 'rg', 'g', 'g', 'g', 'g'],
+              ['g', 'g', 'g', 'g', 'gr', 'r', 'r', 'r', 'r', 'r', 'rg', 'g', 'g', 'g', 'g'],
+              ['g', 'g', 'g', 'g', 'gr', 'r', 'r', 'r', 'r', 'r', 'rg', 'g', 'g', 'g', 'g'],
+              ['g', 'g', 'g', 'g', 'gr', 'r', 'r', 'r', 'r', 'r', 'rg', 'g', 'g', 'g', 'g'],
+              ['g', 'g', 'g', 'g', 'gr', 'r', 'r', 'r', 'r', 'r', 'rg', 'g', 'g', 'g', 'g'],
+              ['g', 'g', 'g', 'g', 'gr', 'r', 'r', 'r', 'r', 'r', 'rg', 'g', 'g', 'g', 'g'],
+              ['g', 'g', 'g', 'g', 'gr', 'r', 'r', 'r', 'r', 'r', 'rg', 'g', 'g', 'g', 'g'],
+              ['g', 'g', 'g', 'g', 'gr', 'r', 'r', 'r', 'r', 'r', 'rg', 'g', 'g', 'g', 'g'],
+              ['g', 'g', 'g', 'g', 'gr', 'r', 'r', 'r', 'r', 'r', 'rg', 'g', 'g', 'g', 'g'],
+              ['g', 'g', 'g', 'g', 'gr', 'r', 'r', 'r', 'r', 'r', 'rg', 'g', 'g', 'g', 'g']]
+}
