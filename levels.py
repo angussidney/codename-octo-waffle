@@ -1,12 +1,4 @@
-"""
-Levels/scenes for rpg game
-
-Please accompany with a .png image with the same name
-
-2 - unreachable area
-1 - difficult terrain
-0 - normal ground
-"""
+import math
 import random
 
 def t ():

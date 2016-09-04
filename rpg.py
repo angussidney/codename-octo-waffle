@@ -10,6 +10,7 @@ import sys
 import os
 import traceback
 import shelve
+from operator import attrgetter
 from send2trash import *
 
 import pygame
@@ -17,8 +18,6 @@ from pygame.locals import *
 from textrect import render_textrect, TextRectException
 
 from levels import *
-from monsters import *
-from characters import *
 
 # All options for game
 WINDOWWIDTH = 600
@@ -88,6 +87,10 @@ def main ():
             terminate()
         pygame.display.update()
         FPSCLOCK.tick(FPS)
+
+### ---------- ###
+###   SCENES   ###
+### ---------- ###
 
 class SceneBase(object):
     def __init__(self):
@@ -231,22 +234,27 @@ class CharacterSelection(SceneBase):
         # Determine if a character has been selected
         if mouse_between_tiles(1, 5, 6, 5) and pressed[0]: # Cleric
             #SAVE['PC'] = Cleric()
+            SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'] = choose_npcs(SAVE['PC'].class_name)
             SAVE.sync()
             self.next = Introduction()
         if mouse_between_tiles(1, 7, 6, 7) and pressed[0]: # Wizard
             #SAVE['PC'] = Wizard()
+            SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'] = choose_npcs(SAVE['PC'].class_name)
             SAVE.sync()
             self.next = Introduction()
         if mouse_between_tiles(1, 9, 6, 9) and pressed[0]: # Ranger
             #SAVE['PC'] = Ranger()
+            SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'] = choose_npcs(SAVE['PC'].class_name)
             SAVE.sync()
             self.next = Introduction()
         if mouse_between_tiles(1, 11, 6, 11) and pressed[0]: # Fighter
-            #SAVE['PC'] = Fighter()
+            SAVE['PC'] = Fighter()
+            SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'] = choose_npcs(SAVE['PC'].class_name)
             SAVE.sync()
             self.next = Introduction()
         if mouse_between_tiles(1, 13, 6, 13) and pressed[0]: # Rogue
             #SAVE['PC'] = Rogue()
+            SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'] = choose_npcs(SAVE['PC'].class_name)
             SAVE.sync()
             self.next = Introduction()
 
@@ -352,6 +360,8 @@ class Introduction(SceneBase):
 class Sc1GoblinAttack(SceneBase):
     def __init__(self):
         SceneBase.__init__(self)
+        self.round_no = 0
+        self.initiative = []
 
     def ProcessInput(self):
         pass
@@ -360,37 +370,23 @@ class Sc1GoblinAttack(SceneBase):
         pass
 
     def Render(self):
-        DISPLAY.fill(BLACK)
-        set_tile(0, 10, 'controls_background')
-        
-        set_tile(1, 11, 'end_button_left_red')
-        set_tile(2, 11, 'button_middle_red')
-        set_tile(3, 11, 'end_button_right_red')
-        render_text_centered(2, 11, PIXELFONT, 'ATTACK', BLACK)
-        
-        if SPELLCASTER == True:
-            set_tile(1, 13, 'end_button_left_blue')
-            set_tile(2, 13, 'button_middle_blue')
-            set_tile(3, 13, 'end_button_right_blue')
-        else:
-            set_tile(1, 13, 'end_button_left_grey')
-            set_tile(2, 13, 'button_middle_grey')
-            set_tile(3, 13, 'end_button_right_grey')
-        render_text_centered(2, 13, PIXELFONT, 'Spells', WHITE)
-
-        set_tile(5, 11, 'end_button_left_blue')
-        set_tile(6, 11, 'button_middle_blue')
-        set_tile(7, 11, 'end_button_right_blue')
-        render_text_centered(6, 11, PIXELFONT, 'Actions', WHITE)
-
-        set_tile(5, 13, 'end_button_left_blue')
-        set_tile(6, 13, 'button_middle_blue')
-        set_tile(7, 13, 'end_button_right_blue')
-        render_text_centered(6, 13, PIXELFONT, 'Talk', WHITE)
-
+        # Draw scene
+        draw_controls()
         draw_scene(scene1)
-        
-        
+
+        # Pre-combat setup
+        if self.round_no == 0:
+            # Initialise combatants
+            gob1 = Goblin(5, 2)
+            gob2 = Goblin(6, 2)
+            gob3 = Goblin(7, 2)
+            gob4 = Goblin(8, 2)
+            # Determine initiative
+            participants = [SAVE['PC'], gob1, gob2, gob3, gob4]
+            initiative = determine_initiative(participants)
+            for i in initiative:
+                i.draw_sprite()
+            
 
 ### ----------------- ###
 ### UTILITY FUNCTIONS ###
@@ -399,6 +395,9 @@ class Sc1GoblinAttack(SceneBase):
 def tile (tile_name):
     # Returns the filepath of a tile
     return os.path.join('tiles', tile_name + '.png')
+def sprite (sprite_name):
+    # Returns the filepath of a tile
+    return os.path.join('sprites', sprite_name + '.png')
 
 def set_tile (x, y, tile_img):
     # Sets the tile at (x, y) to the designated image
@@ -441,7 +440,7 @@ def mouse_between_tiles (x1, y1, x2, y2):
     if mousex >= top_left[0] and mousex <= bottom_right[0] \
        and mousey >= top_left[1] and mousey <= bottom_right[1]:
         return True
-
+        
 def terminate ():
     # Exits pygame and closes the window properly
     # TODO: allow to exit with custom error
@@ -449,9 +448,61 @@ def terminate ():
     pygame.quit()
     sys.exit()
 
-### --------------- ###
-### OTHER FUNCTIONS ###
-### --------------- ###
+### --------------------- ###
+### CALCULATION FUNCTIONS ###
+### --------------------- ###
+
+def choose_npcs (pc):
+    # Remove the PC's class from the list, shuffle it and return the first 3 NPCs
+    possible_npcs = [Cleric(), Wizard(), Rogue(), Fighter(), Ranger()]
+    for i, npc_class in enumerate(possible_npcs):
+    if npc_class.class_name == pc:
+        del possible_npcs[i]
+        break
+    random.shuffle(possible_npcs)
+    return possible_npcs[0], possible_npcs[1], possible_npcs[2]
+
+def roll20 (bonus):
+    return random.randint(1, 20) + bonus
+
+def determine_initiative (participants):
+    for i in participants:
+        i.initiative = roll20(i.score_to_bonus('dex'))
+    order = sorted(participants, reverse=True, key=attrgetter('initiative'))
+    return order
+
+### ----------------- ###
+### DRAWING FUNCTIONS ###
+### ----------------- ###
+
+def draw_controls ():
+    DISPLAY.fill(BLACK)
+    set_tile(0, 10, 'controls_background')
+    
+    set_tile(1, 11, 'end_button_left_red')
+    set_tile(2, 11, 'button_middle_red')
+    set_tile(3, 11, 'end_button_right_red')
+    render_text_centered(2, 11, PIXELFONT, 'ATTACK', BLACK)
+    
+    if SPELLCASTER == True:
+        set_tile(1, 13, 'end_button_left_blue')
+        set_tile(2, 13, 'button_middle_blue')
+        set_tile(3, 13, 'end_button_right_blue')
+    else:
+        set_tile(1, 13, 'end_button_left_grey')
+        set_tile(2, 13, 'button_middle_grey')
+        set_tile(3, 13, 'end_button_right_grey')
+    render_text_centered(2, 13, PIXELFONT, 'Spells', WHITE)
+
+    set_tile(5, 11, 'end_button_left_blue')
+    set_tile(6, 11, 'button_middle_blue')
+    set_tile(7, 11, 'end_button_right_blue')
+    render_text_centered(6, 11, PIXELFONT, 'Actions', WHITE)
+
+    set_tile(5, 13, 'end_button_left_blue')
+    set_tile(6, 13, 'button_middle_blue')
+    set_tile(7, 13, 'end_button_right_blue')
+    render_text_centered(6, 13, PIXELFONT, 'Talk', WHITE)
 
 def draw_scene (scene):
     # Draw background tiles
@@ -480,6 +531,121 @@ def draw_scene (scene):
 
     # Draw border
     pygame.draw.rect(DISPLAY, BLACK, (0, 0, 599, 399), 2)
+
+### ------------ ###
+###  CHARACTERS  ###
+### ------------ ###
+
+class Fighter(object):
+    def __init__(self):
+        self.initiative = 10
+    # Meta info
+    sprite = 'fighter'
+    x = 7
+    y = 8
+    class_name = 'fighter'
+    
+    # DnD stuff
+    level = 1
+    proficiency_bonus = 2
+    scores = {
+        'strength': 16,
+        'dex': 13,
+        'con': 14,
+        'intelligence': 8,
+        'wis': 12,
+        'cha': 10
+    }
+    proficiencies = {
+        'skills': {
+            'athletics': (True, 'strength'),
+            'acrobatics': (False, 'dex'),
+            'sleight_of_hand': (False, 'dex'),
+            'stealth': (False, 'dex'),
+            'arcana': (False, 'intelligence'),
+            'history': (False, 'intelligence'),
+            'investigation': (False, 'intelligence'),
+            'nature': (False, 'intelligence'),
+            'religion': (False, 'intelligence'),
+            'animal_handling': (False, 'wis'),
+            'insight': (True, 'wis'),
+            'medicine': (False, 'wis'),
+            'perception': (True, 'wis'),
+            'survival': (False, 'wis'),
+            'deception': (False, 'cha'),
+            'intimidation': (True, 'cha'),
+            'performance': (False, 'cha'),
+            'persuasion': (False, 'cha')
+        },
+        'saving_throws': {
+            'strength': True,
+            'dex': False,
+            'con': True,
+            'intelligence': False,
+            'wis': False,
+            'cha': False
+        },
+        'weapons': {
+            'simple': True,
+            'martial': True
+        },
+        'armor': {
+            'light': True,
+            'medium': True,
+            'heavy': True,
+            'shields': True
+        }
+    }
+    weapons = {
+        'greatsword': random.randint(1, 6) + random.randint(1, 6)
+        # chain mail, martial weapon + shield, light crossbow + 20 bolts, dungeoneer's pack
+    }
+    def score_to_bonus(self, score):
+        return math.floor((self.scores[score] - 10) / 2)
+    def calculate_bonus(self, skill):
+        if self.proficiencies['skills'][skill][0] == True:
+            return self.score_to_bonus(self.proficiencies['skills'][skill][1]) + self.proficiency_bonus
+        else:
+            return self.score_to_bonus(self.proficiencies['skills'][skill][1])
+    # Methods
+    def draw_sprite(self):
+        img = pygame.image.load(sprite(self.sprite)).convert_alpha()
+        DISPLAY.blit(img, tile_to_pix(self.x, self.y))
+
+### ------------ ###
+###   MONSTERS   ###
+### ------------ ###
+
+class Goblin(object):
+    def __init__(self, x, y):
+        self.initiative = 10
+        self.x = x
+        self.y = y
+    ac = 15
+    hp = 7
+    speed = 30
+    xp = 50
+    languages = ['Common', 'Goblin']
+    scores = {
+        'strength': 8,
+        'dex': 14,
+        'con': 10,
+        'intelligence': 10,
+        'wis': 8,
+        'cha': 8
+    }
+    sprite = 'goblin'
+    def score_to_bonus(self, score):
+        return math.floor((self.scores[score] - 10) / 2)
+    def calculate_bonus(self, skill):
+        if self.proficiencies['skills'][skill][0] == True:
+            return self.score_to_bonus(self.proficiencies['skills'][skill][1]) + self.proficiency_bonus
+        else:
+            return self.score_to_bonus(self.proficiencies['skills'][skill][1])
+    # Methods
+    def draw_sprite(self):
+        img = pygame.image.load(sprite(self.sprite)).convert_alpha()
+        DISPLAY.blit(img, tile_to_pix(self.x, self.y))
 
 if __name__ == '__main__':
     main()
