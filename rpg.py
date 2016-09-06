@@ -378,25 +378,36 @@ class Sc1GoblinAttack(SceneBase):
             gob4 = Goblin(8, 2)
             # Determine initiative
             participants = [SAVE['PC'], SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'], gob1, gob2, gob3, gob4]
+            player_team = [SAVE['PC'], SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3']]
+            monster_team = [gob1, gob2, gob3, gob4]
             self.initiative = determine_initiative(participants)
+            # Place NPCs
             SAVE['NPC1'].x = 8
             SAVE['NPC1'].y = 8
             SAVE['NPC2'].x = 7
             SAVE['NPC2'].y = 8
             SAVE['NPC3'].x = 6
             SAVE['NPC3'].y = 8
+            # Determine surprise
+            stealth_check = roll20(gob1.skills['stealth'])
+            for character in player_team:
+                if 10 + character.calculate_bonus('stealth') < stealth_check:
+                    character.surprised = True
             self.round_no = 1
-
+            
+        # Special handling for surprise
         if self.round_no == 1:
-            pass
+                if initiative[self.turn].surprised:
+                    self.turn += 1
+                    self.message = "You were surprised! You cannot do anything until next turn."
 
     def Render(self):
         # Draw scene
         draw_controls()
         draw_scene(scene1)
 
-        for i in self.initiative:
-            i.draw_sprite() 
+        for creature in self.initiative:
+            creature.draw_sprite() 
             
 
 ### ----------------- ###
@@ -553,6 +564,7 @@ class Fighter(object):
         self.x = x
         self.y = y
         self.is_player = is_player
+        self.surprised = False
     # Meta info
     sprite = 'fighter'
     class_name = 'fighter'
@@ -630,6 +642,7 @@ class Cleric(object):
         self.x = x
         self.y = y
         self.is_player = is_player
+        self.surprised = False
     # Meta info
     sprite = 'cleric'
     class_name = 'cleric'
@@ -707,6 +720,7 @@ class Wizard(object):
         self.x = x
         self.y = y
         self.is_player = is_player
+        self.surprised = False
     # Meta info
     sprite = 'wizard'
     class_name = 'wizard'
@@ -784,6 +798,7 @@ class Rogue(object):
         self.x = x
         self.y = y
         self.is_player = is_player
+        self.surprised = False
     # Meta info
     sprite = 'rogue'
     class_name = 'rogue'
@@ -861,6 +876,7 @@ class Ranger(object):
         self.x = x
         self.y = y
         self.is_player = is_player
+        self.surprised = False
     # Meta info
     sprite = 'ranger'
     class_name = 'ranger'
@@ -941,6 +957,8 @@ class Goblin(object):
         self.initiative = 10
         self.x = x
         self.y = y
+        self.is_player = False
+        self.surprised = False
     ac = 15
     hp = 7
     speed = 30
@@ -954,14 +972,17 @@ class Goblin(object):
         'wis': 8,
         'cha': 8
     }
+    skills = {
+        'stealth': 6,
+    }
     sprite = 'goblin'
     def score_to_bonus(self, score):
         return math.floor((self.scores[score] - 10) / 2)
-    def calculate_bonus(self, skill):
-        if self.proficiencies['skills'][skill][0] == True:
-            return self.score_to_bonus(self.proficiencies['skills'][skill][1]) + self.proficiency_bonus
-        else:
-            return self.score_to_bonus(self.proficiencies['skills'][skill][1])
+    #def calculate_bonus(self, skill):
+    #    if self.proficiencies['skills'][skill][0] == True:
+    #        return self.score_to_bonus(self.proficiencies['skills'][skill][1]) + self.proficiency_bonus
+    #    else:
+    #        return self.score_to_bonus(self.proficiencies['skills'][skill][1])
     # Methods
     def draw_sprite(self):
         img = pygame.image.load(sprite(self.sprite)).convert_alpha()
