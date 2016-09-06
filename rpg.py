@@ -2,6 +2,7 @@
 # Todo: credit pixel art font (cc-by-sa)
 # credit textrect function http://www.pygame.org/pcr/text_rect/index.php
 # also: https://pymotw.com/2/shelve/
+# other section for weapons
 ####################
 
 import math
@@ -22,7 +23,7 @@ from levels import *
 # All options for game
 WINDOWWIDTH = 600
 WINDOWHEIGHT = 600
-WINDOWCAPTION = 'RPG Game'
+WINDOWCAPTION = 'The Dungeons of Feymere'
 WINDOWICON = 'icon.png'
 
 FPS = 30
@@ -233,30 +234,30 @@ class CharacterSelection(SceneBase):
                          "here\n")
         # Determine if a character has been selected
         if mouse_between_tiles(1, 5, 6, 5) and pressed[0]: # Cleric
-            #SAVE['PC'] = Cleric()
+            SAVE['PC'] = Cleric(7, 7, True)
             SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'] = choose_npcs(SAVE['PC'].class_name)
             SAVE.sync()
             self.next = Introduction()
         if mouse_between_tiles(1, 7, 6, 7) and pressed[0]: # Wizard
-            #SAVE['PC'] = Wizard()
+            SAVE['PC'] = Wizard(7, 7, True)
             SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'] = choose_npcs(SAVE['PC'].class_name)
             SAVE.sync()
             self.next = Introduction()
         if mouse_between_tiles(1, 9, 6, 9) and pressed[0]: # Ranger
-            #SAVE['PC'] = Ranger()
+            SAVE['PC'] = Ranger(7, 7, True)
             SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'] = choose_npcs(SAVE['PC'].class_name)
             SAVE.sync()
             self.next = Introduction()
         if mouse_between_tiles(1, 11, 6, 11) and pressed[0]: # Fighter
-            SAVE['PC'] = Fighter()
+            SAVE['PC'] = Fighter(7, 7, True)
             SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'] = choose_npcs(SAVE['PC'].class_name)
             SAVE.sync()
             self.next = Introduction()
         if mouse_between_tiles(1, 13, 6, 13) and pressed[0]: # Rogue
-            #SAVE['PC'] = Rogue()
+            SAVE['PC'] = Rogue(7, 7, True)
             SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'] = choose_npcs(SAVE['PC'].class_name)
             SAVE.sync()
-            self.next = Introduction()
+            self.next = Introduction(7, 8, True)
 
     def Update(self):
         pass
@@ -362,18 +363,12 @@ class Sc1GoblinAttack(SceneBase):
         SceneBase.__init__(self)
         self.round_no = 0
         self.initiative = []
+        self.turn = 0
 
     def ProcessInput(self):
         pass
 
     def Update(self):
-        pass
-
-    def Render(self):
-        # Draw scene
-        draw_controls()
-        draw_scene(scene1)
-
         # Pre-combat setup
         if self.round_no == 0:
             # Initialise combatants
@@ -382,10 +377,26 @@ class Sc1GoblinAttack(SceneBase):
             gob3 = Goblin(7, 2)
             gob4 = Goblin(8, 2)
             # Determine initiative
-            participants = [SAVE['PC'], gob1, gob2, gob3, gob4]
-            initiative = determine_initiative(participants)
-            for i in initiative:
-                i.draw_sprite()
+            participants = [SAVE['PC'], SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'], gob1, gob2, gob3, gob4]
+            self.initiative = determine_initiative(participants)
+            SAVE['NPC1'].x = 8
+            SAVE['NPC1'].y = 8
+            SAVE['NPC2'].x = 7
+            SAVE['NPC2'].y = 8
+            SAVE['NPC3'].x = 6
+            SAVE['NPC3'].y = 8
+            self.round_no = 1
+
+        if self.round_no == 1:
+            pass
+
+    def Render(self):
+        # Draw scene
+        draw_controls()
+        draw_scene(scene1)
+
+        for i in self.initiative:
+            i.draw_sprite() 
             
 
 ### ----------------- ###
@@ -454,11 +465,11 @@ def terminate ():
 
 def choose_npcs (pc):
     # Remove the PC's class from the list, shuffle it and return the first 3 NPCs
-    possible_npcs = [Cleric(), Wizard(), Rogue(), Fighter(), Ranger()]
+    possible_npcs = [Cleric(5, 7, True), Wizard(5, 7, True), Rogue(5, 7, True), Fighter(5, 7, True), Ranger(5, 7, True)]
     for i, npc_class in enumerate(possible_npcs):
-    if npc_class.class_name == pc:
-        del possible_npcs[i]
-        break
+        if npc_class.class_name == pc:
+            del possible_npcs[i]
+            break
     random.shuffle(possible_npcs)
     return possible_npcs[0], possible_npcs[1], possible_npcs[2]
 
@@ -537,12 +548,13 @@ def draw_scene (scene):
 ### ------------ ###
 
 class Fighter(object):
-    def __init__(self):
+    def __init__(self, x, y, is_player):
         self.initiative = 10
+        self.x = x
+        self.y = y
+        self.is_player = is_player
     # Meta info
     sprite = 'fighter'
-    x = 7
-    y = 8
     class_name = 'fighter'
     
     # DnD stuff
@@ -593,6 +605,314 @@ class Fighter(object):
             'light': True,
             'medium': True,
             'heavy': True,
+            'shields': True
+        }
+    }
+    weapons = {
+        'greatsword': random.randint(1, 6) + random.randint(1, 6)
+        # chain mail, martial weapon + shield, light crossbow + 20 bolts, dungeoneer's pack
+    }
+    def score_to_bonus(self, score):
+        return math.floor((self.scores[score] - 10) / 2)
+    def calculate_bonus(self, skill):
+        if self.proficiencies['skills'][skill][0] == True:
+            return self.score_to_bonus(self.proficiencies['skills'][skill][1]) + self.proficiency_bonus
+        else:
+            return self.score_to_bonus(self.proficiencies['skills'][skill][1])
+    # Methods
+    def draw_sprite(self):
+        img = pygame.image.load(sprite(self.sprite)).convert_alpha()
+        DISPLAY.blit(img, tile_to_pix(self.x, self.y))
+
+class Cleric(object):
+    def __init__(self, x, y, is_player):
+        self.initiative = 10
+        self.x = x
+        self.y = y
+        self.is_player = is_player
+    # Meta info
+    sprite = 'cleric'
+    class_name = 'cleric'
+    
+    # DnD stuff
+    level = 1
+    proficiency_bonus = 2
+    scores = {
+        'strength': 14,
+        'dex': 8,
+        'con': 13,
+        'intelligence': 10,
+        'wis': 16,
+        'cha': 12
+    }
+    proficiencies = {
+        'skills': {
+            'athletics': (False, 'strength'),
+            'acrobatics': (False, 'dex'),
+            'sleight_of_hand': (False, 'dex'),
+            'stealth': (False, 'dex'),
+            'arcana': (False, 'intelligence'),
+            'history': (True, 'intelligence'),
+            'investigation': (False, 'intelligence'),
+            'nature': (False, 'intelligence'),
+            'religion': (True, 'intelligence'),
+            'animal_handling': (False, 'wis'),
+            'insight': (True, 'wis'),
+            'medicine': (True, 'wis'),
+            'perception': (False, 'wis'),
+            'survival': (False, 'wis'),
+            'deception': (False, 'cha'),
+            'intimidation': (False, 'cha'),
+            'performance': (False, 'cha'),
+            'persuasion': (False, 'cha')
+        },
+        'saving_throws': {
+            'strength': False,
+            'dex': False,
+            'con': False,
+            'intelligence': False,
+            'wis': True,
+            'cha': True
+        },
+        'weapons': {
+            'simple': True,
+            'martial': False
+        },
+        'armor': {
+            'light': True,
+            'medium': True,
+            'heavy': False,
+            'shields': True
+        }
+    }
+    weapons = {
+        'greatsword': random.randint(1, 6) + random.randint(1, 6)
+        # chain mail, martial weapon + shield, light crossbow + 20 bolts, dungeoneer's pack
+    }
+    def score_to_bonus(self, score):
+        return math.floor((self.scores[score] - 10) / 2)
+    def calculate_bonus(self, skill):
+        if self.proficiencies['skills'][skill][0] == True:
+            return self.score_to_bonus(self.proficiencies['skills'][skill][1]) + self.proficiency_bonus
+        else:
+            return self.score_to_bonus(self.proficiencies['skills'][skill][1])
+    # Methods
+    def draw_sprite(self):
+        img = pygame.image.load(sprite(self.sprite)).convert_alpha()
+        DISPLAY.blit(img, tile_to_pix(self.x, self.y))
+
+class Wizard(object):
+    def __init__(self, x, y, is_player):
+        self.initiative = 10
+        self.x = x
+        self.y = y
+        self.is_player = is_player
+    # Meta info
+    sprite = 'wizard'
+    class_name = 'wizard'
+    
+    # DnD stuff
+    level = 1
+    proficiency_bonus = 2
+    scores = {
+        'strength': 8,
+        'dex': 14,
+        'con': 13,
+        'intelligence': 16,
+        'wis': 12,
+        'cha': 10
+    }
+    proficiencies = {
+        'skills': {
+            'athletics': (False, 'strength'),
+            'acrobatics': (False, 'dex'),
+            'sleight_of_hand': (False, 'dex'),
+            'stealth': (False, 'dex'),
+            'arcana': (True, 'intelligence'),
+            'history': (True, 'intelligence'),
+            'investigation': (True, 'intelligence'),
+            'nature': (False, 'intelligence'),
+            'religion': (False, 'intelligence'),
+            'animal_handling': (False, 'wis'),
+            'insight': (True, 'wis'),
+            'medicine': (False, 'wis'),
+            'perception': (False, 'wis'),
+            'survival': (False, 'wis'),
+            'deception': (False, 'cha'),
+            'intimidation': (False, 'cha'),
+            'performance': (False, 'cha'),
+            'persuasion': (False, 'cha')
+        },
+        'saving_throws': {
+            'strength': False,
+            'dex': False,
+            'con': False,
+            'intelligence': True,
+            'wis': True,
+            'cha': False
+        },
+        'weapons': {
+            'simple': False,
+            'martial': False
+        },
+        'armor': {
+            'light': False,
+            'medium': False,
+            'heavy': False,
+            'shields': False
+        }
+    }
+    weapons = {
+        'greatsword': random.randint(1, 6) + random.randint(1, 6)
+        # chain mail, martial weapon + shield, light crossbow + 20 bolts, dungeoneer's pack
+    }
+    def score_to_bonus(self, score):
+        return math.floor((self.scores[score] - 10) / 2)
+    def calculate_bonus(self, skill):
+        if self.proficiencies['skills'][skill][0] == True:
+            return self.score_to_bonus(self.proficiencies['skills'][skill][1]) + self.proficiency_bonus
+        else:
+            return self.score_to_bonus(self.proficiencies['skills'][skill][1])
+    # Methods
+    def draw_sprite(self):
+        img = pygame.image.load(sprite(self.sprite)).convert_alpha()
+        DISPLAY.blit(img, tile_to_pix(self.x, self.y))
+
+class Rogue(object):
+    def __init__(self, x, y, is_player):
+        self.initiative = 10
+        self.x = x
+        self.y = y
+        self.is_player = is_player
+    # Meta info
+    sprite = 'rogue'
+    class_name = 'rogue'
+    
+    # DnD stuff
+    level = 1
+    proficiency_bonus = 2
+    scores = {
+        'strength': 12,
+        'dex': 16,
+        'con': 10,
+        'intelligence': 14,
+        'wis': 8,
+        'cha': 13
+    }
+    proficiencies = {
+        'skills': {
+            'athletics': (False, 'strength'),
+            'acrobatics': (False, 'dex'),
+            'sleight_of_hand': (True, 'dex'),
+            'stealth': (True, 'dex'),
+            'arcana': (False, 'intelligence'),
+            'history': (False, 'intelligence'),
+            'investigation': (True, 'intelligence'),
+            'nature': (False, 'intelligence'),
+            'religion': (False, 'intelligence'),
+            'animal_handling': (False, 'wis'),
+            'insight': (True, 'wis'),
+            'medicine': (False, 'wis'),
+            'perception': (False, 'wis'),
+            'survival': (False, 'wis'),
+            'deception': (True, 'cha'),
+            'intimidation': (True, 'cha'),
+            'performance': (False, 'cha'),
+            'persuasion': (False, 'cha')
+        },
+        'saving_throws': {
+            'strength': False,
+            'dex': True,
+            'con': False,
+            'intelligence': True,
+            'wis': False,
+            'cha': False
+        },
+        'weapons': {
+            'simple': True,
+            'martial': False
+        },
+        'armor': {
+            'light': True,
+            'medium': False,
+            'heavy': False,
+            'shields': False
+        }
+    }
+    weapons = {
+        'greatsword': random.randint(1, 6) + random.randint(1, 6)
+        # chain mail, martial weapon + shield, light crossbow + 20 bolts, dungeoneer's pack
+    }
+    def score_to_bonus(self, score):
+        return math.floor((self.scores[score] - 10) / 2)
+    def calculate_bonus(self, skill):
+        if self.proficiencies['skills'][skill][0] == True:
+            return self.score_to_bonus(self.proficiencies['skills'][skill][1]) + self.proficiency_bonus
+        else:
+            return self.score_to_bonus(self.proficiencies['skills'][skill][1])
+    # Methods
+    def draw_sprite(self):
+        img = pygame.image.load(sprite(self.sprite)).convert_alpha()
+        DISPLAY.blit(img, tile_to_pix(self.x, self.y))
+
+class Ranger(object):
+    def __init__(self, x, y, is_player):
+        self.initiative = 10
+        self.x = x
+        self.y = y
+        self.is_player = is_player
+    # Meta info
+    sprite = 'ranger'
+    class_name = 'ranger'
+    
+    # DnD stuff
+    level = 1
+    proficiency_bonus = 2
+    scores = {
+        'strength': 13,
+        'dex': 16,
+        'con': 12,
+        'intelligence': 10,
+        'wis': 14,
+        'cha': 8
+    }
+    proficiencies = {
+        'skills': {
+            'athletics': (True, 'strength'),
+            'acrobatics': (False, 'dex'),
+            'sleight_of_hand': (False, 'dex'),
+            'stealth': (True, 'dex'),
+            'arcana': (False, 'intelligence'),
+            'history': (False, 'intelligence'),
+            'investigation': (True, 'intelligence'),
+            'nature': (False, 'intelligence'),
+            'religion': (False, 'intelligence'),
+            'animal_handling': (False, 'wis'),
+            'insight': (False, 'wis'),
+            'medicine': (False, 'wis'),
+            'perception': (True, 'wis'),
+            'survival': (True, 'wis'),
+            'deception': (False, 'cha'),
+            'intimidation': (False, 'cha'),
+            'performance': (False, 'cha'),
+            'persuasion': (False, 'cha')
+        },
+        'saving_throws': {
+            'strength': True,
+            'dex': True,
+            'con': False,
+            'intelligence': False,
+            'wis': False,
+            'cha': False
+        },
+        'weapons': {
+            'simple': True,
+            'martial': True
+        },
+        'armor': {
+            'light': True,
+            'medium': True,
+            'heavy': False,
             'shields': True
         }
     }
