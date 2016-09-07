@@ -73,6 +73,7 @@ def main ():
     # Background music
     background_music = pygame.mixer.music.load(sound(MUSIC))
     pygame.mixer.music.play(-1, 0.0)
+    mute = False
 
     active_scene = TitleScreen()
 
@@ -84,6 +85,13 @@ def main ():
         for event in pygame.event.get():
             if event.type == QUIT:
                 terminate()
+            if event.type == KEYUP and event.key == K_o:
+                if mute == False:
+                    pygame.mixer.music.set_volume(0.0)
+                    mute = True
+                elif mute == True:
+                    pygame.mixer.music.set_volume(1.0)
+                    mute = False
         try:
             active_scene.ProcessInput()
             active_scene.Update()
