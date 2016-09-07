@@ -28,6 +28,8 @@ WINDOWICON = 'icon.png'
 
 FPS = 30
 
+MUSIC = 'overworld'
+
 SPELLCASTER = False
 
 #Start with a clean save until proper system is implemented
@@ -67,6 +69,10 @@ def main ():
     BASICFONT = pygame.font.Font('freesansbold.ttf', 20)
     PIXELFONT = pygame.font.Font('pixelart.ttf', 16)
     PIXELFONTLARGE = pygame.font.Font('pixelart.ttf', 32)
+
+    # Background music
+    background_music = pygame.mixer.music.load(sound(MUSIC))
+    pygame.mixer.music.play(-1, 0.0)
 
     active_scene = TitleScreen()
 
@@ -184,7 +190,14 @@ class About(SceneBase):
         set_tile(8, 1, 'styled_button_right')
         render_text_centered(7, 1, PIXELFONT, 'Back', WHITE)
         ## TODO: REPLACE WITH SOMETHING MORE ELEGANT AND MULTILINE STRING (brackets then standard string no comma)
-        text_surf = render_textrect('\'The Dungeons of Feymere\' is an RPG game written by angussidney. Some of the game is based on a simplified version of the rules contained in the DnD 5e SRD.\n\nThe source code of this program is released under the MIT license. See LICENSE.txt for details.', PIXELFONT, tiles_to_rect(2, 3, 12, 13), WHITE, 0)
+        text_surf = render_textrect(('\'The Dungeons of Feymere\' is an RPG game written by angussidney. '
+                                     'Some of the game is based on a simplified version of the rules '
+                                     'contained in the DnD 5e SRD.\n\n'
+                                     'The source code of this program is released under the MIT license. '
+                                     'See LICENSE.txt for details.\n\n'
+                                     'Overworld by Kevin MacLeod\n'
+                                     'incompetech.com\n'
+                                     'Licensed under CC BY 3.0'), PIXELFONT, tiles_to_rect(2, 3, 12, 13), WHITE, 0)
         text_rect = text_surf.get_rect()
         text_rect.center = adj_tile_to_pix(7, 8, 20, 20)
         DISPLAY.blit(text_surf, text_rect)
@@ -398,8 +411,8 @@ class Sc1GoblinAttack(SceneBase):
         # Special handling for surprise
         if self.round_no == 1:
                 if initiative[self.turn].surprised:
-                    self.turn += 1
                     self.message = "You were surprised! You cannot do anything until next turn."
+                    self.turn += 1
 
     def Render(self):
         # Draw scene
@@ -417,9 +430,13 @@ class Sc1GoblinAttack(SceneBase):
 def tile (tile_name):
     # Returns the filepath of a tile
     return os.path.join('tiles', tile_name + '.png')
+
 def sprite (sprite_name):
     # Returns the filepath of a tile
     return os.path.join('sprites', sprite_name + '.png')
+
+def sound (sound_name):
+    return os.path.join('sound', sound_name + '.mp3')
 
 def set_tile (x, y, tile_img):
     # Sets the tile at (x, y) to the designated image
@@ -990,3 +1007,5 @@ class Goblin(object):
 
 if __name__ == '__main__':
     main()
+
+
