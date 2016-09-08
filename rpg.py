@@ -19,7 +19,7 @@ import sys
 import os
 import traceback
 import shelve
-from operator import attrgetter
+from operator import attrgetter, itemgetter
 from send2trash import *
 
 import pygame
@@ -37,8 +37,6 @@ WINDOWICON = 'icon.png'
 FPS = 30
 
 MUSIC = 'overworld'
-
-SPELLCASTER = False
 
 #Start with a clean save until proper system is implemented
 try:
@@ -270,24 +268,28 @@ class CharacterSelection(SceneBase):
             self.next = Introduction()
         if mouse_between_tiles(1, 7, 6, 7) and pressed[0]: # Wizard
             SAVE['PC'] = Wizard(7, 7, True)
+            SAVE['PC'].name = 'Kei Frightfulwood'
             SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'] = choose_npcs(SAVE['PC'].class_name)
             SAVE.sync()
             self.next = Introduction()
         if mouse_between_tiles(1, 9, 6, 9) and pressed[0]: # Ranger
             SAVE['PC'] = Ranger(7, 7, True)
+            SAVE['PC'].name = 'Kei Frightfulwood'
             SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'] = choose_npcs(SAVE['PC'].class_name)
             SAVE.sync()
             self.next = Introduction()
         if mouse_between_tiles(1, 11, 6, 11) and pressed[0]: # Fighter
             SAVE['PC'] = Fighter(7, 7, True)
+            SAVE['PC'].name = 'Kei Frightfulwood'
             SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'] = choose_npcs(SAVE['PC'].class_name)
             SAVE.sync()
             self.next = Introduction()
         if mouse_between_tiles(1, 13, 6, 13) and pressed[0]: # Rogue
             SAVE['PC'] = Rogue(7, 7, True)
+            SAVE['PC'].name = 'Kei Frightfulwood'
             SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'] = choose_npcs(SAVE['PC'].class_name)
             SAVE.sync()
-            self.next = Introduction(7, 8, True)
+            self.next = Introduction()
 
     def Update(self):
         pass
@@ -394,7 +396,7 @@ class Sc1GoblinAttack(SceneBase):
         self.round_no = 0
         self.initiative = []
         self.turn = 0
-        self.message
+        self.message = " "
 
     def ProcessInput(self):
         pass
@@ -409,8 +411,9 @@ class Sc1GoblinAttack(SceneBase):
             gob4 = Goblin(8, 2)
             # Determine initiative
             participants = [SAVE['PC'], SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'], gob1, gob2, gob3, gob4]
-            player_team = [SAVE['PC'], SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3']]
-            monster_team = [gob1, gob2, gob3, gob4]
+            self.player_team = [SAVE['PC'], SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3']]
+            self.monster_team = [gob1, gob2, gob3, gob4]
+            self.non_controllable_characters = [SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'], gob1, gob2, gob3, gob4]
             self.initiative = determine_initiative(participants)
             # Place NPCs
             SAVE['NPC1'].x = 8
@@ -421,20 +424,31 @@ class Sc1GoblinAttack(SceneBase):
             SAVE['NPC3'].y = 8
             # Determine surprise
             stealth_check = roll20(gob1.skills['stealth'])
-            for character in player_team:
+            for character in self.player_team:
                 if 10 + character.calculate_bonus('stealth') < stealth_check:
                     character.surprised = True
             self.round_no = 1
             
         # Special handling for surprise
         if self.round_no == 1:
-                if self.initiative[self.turn].surprised:
-                    self.message = "%s surprised! %s cannot do anything until next turn.".format(self.initiative[self.turn].adress, self.initiative[self.turn].pronoun)
-                    self.turn += 1
+            current = self.initiative[self.turn]
+            if current.surprised:
+                self.message = "%s surprised! %s cannot do anything until next turn.".format(current.adress, current.pronoun)
+                current.surprised = False
+                self.turn += 1
+            elif current in self.non_controllable_characters:
+                # NPCs and monsters
+                #current.take_turn()
+                print(find_nearest_enemy(current, self.player_team, self.monster_team))
+            else:
+                # Player
+                pass
+                
 
     def Render(self):
         # Draw scene
         draw_controls()
+        draw_message(self.message)
         draw_scene(scene1)
 
         for creature in self.initiative:
@@ -528,6 +542,20 @@ def determine_initiative (participants):
     order = sorted(participants, reverse=True, key=attrgetter('initiative'))
     return order
 
+def find_nearest_enemy (current, player_team, monster_team):
+    distances = []
+    if current in player_team:
+        for monster in monster_team:
+            distance = max(abs(monster.x - current.x) + 2, abs(monster.y - current.y) + 2)
+            distances.append((distance, monster))
+    else:
+        for character in player_team:
+            distance = max(abs(character.x - current.x) + 2, abs(character.y - current.y) + 2)
+            distances.append((distance, character))
+    new_distances = sorted(distances, key=itemgetter(0))
+    #return distances[0][0]
+    print(distances)
+
 ### ----------------- ###
 ### DRAWING FUNCTIONS ###
 ### ----------------- ###
@@ -541,7 +569,7 @@ def draw_controls ():
     set_tile(3, 11, 'end_button_right_red')
     render_text_centered(2, 11, PIXELFONT, 'ATTACK', BLACK)
     
-    if SPELLCASTER == True:
+    if SAVE['PC'].spellcaster == True:
         set_tile(1, 13, 'end_button_left_blue')
         set_tile(2, 13, 'button_middle_blue')
         set_tile(3, 13, 'end_button_right_blue')
@@ -556,10 +584,16 @@ def draw_controls ():
     set_tile(7, 11, 'end_button_right_blue')
     render_text_centered(6, 11, PIXELFONT, 'Actions', WHITE)
 
-    set_tile(5, 13, 'end_button_left_blue')
-    set_tile(6, 13, 'button_middle_blue')
-    set_tile(7, 13, 'end_button_right_blue')
+    set_tile(5, 13, 'end_button_left_grey')
+    set_tile(6, 13, 'button_middle_grey')
+    set_tile(7, 13, 'end_button_right_grey')
     render_text_centered(6, 13, PIXELFONT, 'Talk', WHITE)
+
+def draw_message (message):
+    text_surf = render_textrect(message, PIXELFONT, tiles_to_rect(9, 11, 13, 13), BLACK, 1).convert_alpha()
+    text_rect = text_surf.get_rect()
+    text_rect.topleft = tile_to_pix(9, 11)
+    DISPLAY.blit(text_surf, text_rect)
 
 def draw_scene (scene):
     # Draw background tiles
@@ -606,6 +640,7 @@ class Fighter(object):
     name = 'Ben Shadowsoul'
     adress = "You are"
     pronoun = "They"
+    spellcaster = False
     
     # DnD stuff
     level = 1
@@ -685,6 +720,9 @@ class Cleric(object):
     sprite = 'cleric'
     class_name = 'cleric'
     name = 'Edana Earthlydrum'
+    adress = "You are"
+    pronoun = "They"
+    spellcaster = True
     
     # DnD stuff
     level = 1
@@ -764,6 +802,9 @@ class Wizard(object):
     sprite = 'wizard'
     class_name = 'wizard'
     name = 'Ceithin Jadeflail'
+    adress = "You are"
+    pronoun = "They"
+    spellcaster = True
     
     # DnD stuff
     level = 1
@@ -843,6 +884,9 @@ class Rogue(object):
     sprite = 'rogue'
     class_name = 'rogue'
     name = 'Conal Trickybones'
+    adress = "You are"
+    pronoun = "They"
+    spellcaster = False
     
     # DnD stuff
     level = 1
@@ -922,6 +966,9 @@ class Ranger(object):
     sprite = 'ranger'
     class_name = 'ranger'
     name = 'Culhwch Blacktroll'
+    adress = "You are"
+    pronoun = "They"
+    spellcaster = False
     
     # DnD stuff
     level = 1
