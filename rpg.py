@@ -3,6 +3,14 @@
 # credit textrect function http://www.pygame.org/pcr/text_rect/index.php
 # also: https://pymotw.com/2/shelve/
 # other section for weapons
+#
+# Names
+# Ben Shadowsoul (fighter)
+# Culhwch Blacktroll (ranger)
+# Ceithin Jadeflail (wizard)
+# Conal Trickybones (rogue)
+# Edana Earthlydrum (cleric)
+# Kei Frightfulwood (player)
 ####################
 
 import math
@@ -256,6 +264,7 @@ class CharacterSelection(SceneBase):
         # Determine if a character has been selected
         if mouse_between_tiles(1, 5, 6, 5) and pressed[0]: # Cleric
             SAVE['PC'] = Cleric(7, 7, True)
+            SAVE['PC'].name = 'Kei Frightfulwood'
             SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'] = choose_npcs(SAVE['PC'].class_name)
             SAVE.sync()
             self.next = Introduction()
@@ -385,6 +394,7 @@ class Sc1GoblinAttack(SceneBase):
         self.round_no = 0
         self.initiative = []
         self.turn = 0
+        self.message
 
     def ProcessInput(self):
         pass
@@ -418,8 +428,8 @@ class Sc1GoblinAttack(SceneBase):
             
         # Special handling for surprise
         if self.round_no == 1:
-                if initiative[self.turn].surprised:
-                    self.message = "You were surprised! You cannot do anything until next turn."
+                if self.initiative[self.turn].surprised:
+                    self.message = "%s surprised! %s cannot do anything until next turn.".format(self.initiative[self.turn].adress, self.initiative[self.turn].pronoun)
                     self.turn += 1
 
     def Render(self):
@@ -428,7 +438,7 @@ class Sc1GoblinAttack(SceneBase):
         draw_scene(scene1)
 
         for creature in self.initiative:
-            creature.draw_sprite() 
+            creature.draw_sprite()
             
 
 ### ----------------- ###
@@ -593,6 +603,9 @@ class Fighter(object):
     # Meta info
     sprite = 'fighter'
     class_name = 'fighter'
+    name = 'Ben Shadowsoul'
+    adress = "You are"
+    pronoun = "They"
     
     # DnD stuff
     level = 1
@@ -671,6 +684,7 @@ class Cleric(object):
     # Meta info
     sprite = 'cleric'
     class_name = 'cleric'
+    name = 'Edana Earthlydrum'
     
     # DnD stuff
     level = 1
@@ -749,6 +763,7 @@ class Wizard(object):
     # Meta info
     sprite = 'wizard'
     class_name = 'wizard'
+    name = 'Ceithin Jadeflail'
     
     # DnD stuff
     level = 1
@@ -827,6 +842,7 @@ class Rogue(object):
     # Meta info
     sprite = 'rogue'
     class_name = 'rogue'
+    name = 'Conal Trickybones'
     
     # DnD stuff
     level = 1
@@ -905,6 +921,7 @@ class Ranger(object):
     # Meta info
     sprite = 'ranger'
     class_name = 'ranger'
+    name = 'Culhwch Blacktroll'
     
     # DnD stuff
     level = 1
