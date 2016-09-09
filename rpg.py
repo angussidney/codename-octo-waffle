@@ -91,7 +91,7 @@ def main ():
         for event in pygame.event.get():
             if event.type == QUIT:
                 terminate()
-            if event.type == KEYUP and event.key == K_o:
+            if event.type == KEYUP and event.key == K_m:
                 if mute == False:
                     pygame.mixer.music.set_volume(0.0)
                     mute = True
@@ -184,6 +184,8 @@ class TitleScreen(SceneBase):
         set_tile(8, 12, 'button_middle_green')
         set_tile(9, 12, 'styled_button_right')
         render_text_centered(7, 12, PIXELFONT, 'Exit', WHITE)
+
+        render_text_centered(7, 14, PIXELFONT, 'Press M at any time to mute', WHITE)
 
 class About(SceneBase):
     def __init__(self):
@@ -365,7 +367,7 @@ class Introduction(SceneBase):
 
     def ProcessInput(self):
         pressed = pygame.mouse.get_pressed()
-        if mouse_between_tiles(5, 10, 9, 10) and pressed[0]: # Back button
+        if mouse_between_tiles(5, 12, 9, 12) and pressed[0]: # Back button
             self.next = Sc1GoblinAttack()
     
     def Update(self):
@@ -373,12 +375,7 @@ class Introduction(SceneBase):
 
     def Render(self):
         DISPLAY.fill(BLACK)
-        set_tile(5, 10, 'styled_button_left')
-        set_tile(6, 10, 'button_middle_green')
-        set_tile(7, 10, 'button_middle_green')
-        set_tile(8, 10, 'button_middle_green')
-        set_tile(9, 10, 'styled_button_right')
-        render_text_centered(7, 10, PIXELFONT, 'Continue', WHITE)
+        # Summary
         text_surf = render_textrect(('Bob McBobface, a noble from the city of Durin is paying you '
                                      'and your party TEN gold pieces each to escort him to the town '
                                      'of Feymere. Payment will only be delivered upon safe arrival '
@@ -387,8 +384,31 @@ class Introduction(SceneBase):
                                      'story begins approximately half way through the second day of '
                                      'travelling...'), PIXELFONT, tiles_to_rect(1, 1, 9, 5), WHITE, 1).convert_alpha()
         text_rect = text_surf.get_rect()
-        text_rect.topleft = tile_to_pix(3, 4)
+        text_rect.topleft = tile_to_pix(3, 1)
         DISPLAY.blit(text_surf, text_rect)
+
+        # Companions
+        render_text_centered(7, 7, PIXELFONT, 'Your companions are', WHITE)
+        SAVE['NPC1'].x = 2
+        SAVE['NPC1'].y = 9
+        SAVE['NPC2'].x = 7
+        SAVE['NPC2'].y = 8
+        SAVE['NPC3'].x = 12
+        SAVE['NPC3'].y = 9
+        SAVE['NPC1'].draw_sprite()
+        SAVE['NPC2'].draw_sprite()
+        SAVE['NPC3'].draw_sprite()
+        render_text_centered(2, 10, PIXELFONT, SAVE['NPC1'].name, WHITE)
+        render_text_centered(7, 9, PIXELFONT, SAVE['NPC2'].name, WHITE)
+        render_text_centered(12, 10, PIXELFONT, SAVE['NPC3'].name, WHITE)
+
+        # Continue
+        set_tile(5, 12, 'styled_button_left')
+        set_tile(6, 12, 'button_middle_green')
+        set_tile(7, 12, 'button_middle_green')
+        set_tile(8, 12, 'button_middle_green')
+        set_tile(9, 12, 'styled_button_right')
+        render_text_centered(7, 12, PIXELFONT, 'Continue', WHITE)
         
 class Sc1GoblinAttack(SceneBase):
     def __init__(self):
@@ -396,7 +416,7 @@ class Sc1GoblinAttack(SceneBase):
         self.round_no = 0
         self.initiative = []
         self.turn = 0
-        self.message = " "
+        self.message_queue = ['You have been attacked by a horde of goblins! Click to view more text.']
 
     def ProcessInput(self):
         pass
@@ -427,24 +447,25 @@ class Sc1GoblinAttack(SceneBase):
             for character in self.player_team:
                 if 10 + character.calculate_bonus('stealth') < stealth_check:
                     character.surprised = True
-            self.round_no = 1
-            
-        # Special handling for surprise
-        if self.round_no == 1:
-            current = self.initiative[self.turn]
-            if current.surprised:
-                self.message = "%s surprised! %s cannot do anything until next turn.".format(current.adress, current.pronoun)
-                current.surprised = False
-                self.turn += 1
-            elif current in self.non_controllable_characters:
-                # NPCs and monsters
-                #current.take_turn()
-                print(find_nearest_enemy(current, self.player_team, self.monster_team))
-            else:
-                # Player
-                pass
-                
+            self.round_no += 1
 
+        if len(self.message_queue) == 0:
+            # Special handling for surprise
+            if self.round_no == 1:
+                current = self.initiative[self.turn]
+                current.speed_left = current.speed
+                if current.surprised:
+                    self.message = "%s surprised! %s cannot do anything until next turn.".format(current.adress, current.pronoun)
+                    current.surprised = False
+                elif current in self.non_controllable_characters:
+                    # NPCs and monsters
+                    enemy = determine_enemy(current, self.player_team, self.monster_team)
+                    current.attack(enemy)
+                else:
+                    # Player
+                    pass
+                self.turn += 1
+                
     def Render(self):
         # Draw scene
         draw_controls()
@@ -454,6 +475,49 @@ class Sc1GoblinAttack(SceneBase):
         for creature in self.initiative:
             creature.draw_sprite()
             
+### --------------------- ###
+### CALCULATION FUNCTIONS ###
+### --------------------- ###
+
+def choose_npcs (pc):
+    # Remove the PC's class from the list, shuffle it and return the first 3 NPCs
+    possible_npcs = [Cleric(5, 7, True), Wizard(5, 7, True), Rogue(5, 7, True), Fighter(5, 7, True), Ranger(5, 7, True)]
+    for i, npc_class in enumerate(possible_npcs):
+        if npc_class.class_name == pc:
+            del possible_npcs[i]
+            break
+    random.shuffle(possible_npcs)
+    return possible_npcs[0], possible_npcs[1], possible_npcs[2]
+
+def roll20 (bonus):
+    return random.randint(1, 20) + bonus
+
+def determine_initiative (participants):
+    for i in participants:
+        i.initiative = roll20(i.score_to_bonus('dex'))
+    order = sorted(participants, reverse=True, key=attrgetter('initiative'))
+    return order
+
+def determine_enemy (current, player_team, monster_team):
+    distances = []
+    if current in player_team:
+        for monster in monster_team:
+            random_modifier = random.randint(1, 3)
+            distance = max(abs(monster.x - current.x) + random_modifier, abs(monster.y - current.y) + random_modifier)
+            distances.append((monster, distance))
+    else:
+        for character in player_team:
+            distance = max(abs(character.x - current.x) + 2, abs(character.y - current.y) + 2)
+            distances.append((character, distance))
+    new_distances = sorted(distances, key=itemgetter(1))
+    return new_distances[0][0]
+
+def occupied (x, y, creatures):
+    # Check if a square is occupied
+    for creature in creatures:
+        if creature.x == x and creature.y == y:
+            return True
+    return False
 
 ### ----------------- ###
 ### UTILITY FUNCTIONS ###
@@ -518,43 +582,6 @@ def terminate ():
     SAVE.close()
     pygame.quit()
     sys.exit()
-
-### --------------------- ###
-### CALCULATION FUNCTIONS ###
-### --------------------- ###
-
-def choose_npcs (pc):
-    # Remove the PC's class from the list, shuffle it and return the first 3 NPCs
-    possible_npcs = [Cleric(5, 7, True), Wizard(5, 7, True), Rogue(5, 7, True), Fighter(5, 7, True), Ranger(5, 7, True)]
-    for i, npc_class in enumerate(possible_npcs):
-        if npc_class.class_name == pc:
-            del possible_npcs[i]
-            break
-    random.shuffle(possible_npcs)
-    return possible_npcs[0], possible_npcs[1], possible_npcs[2]
-
-def roll20 (bonus):
-    return random.randint(1, 20) + bonus
-
-def determine_initiative (participants):
-    for i in participants:
-        i.initiative = roll20(i.score_to_bonus('dex'))
-    order = sorted(participants, reverse=True, key=attrgetter('initiative'))
-    return order
-
-def find_nearest_enemy (current, player_team, monster_team):
-    distances = []
-    if current in player_team:
-        for monster in monster_team:
-            distance = max(abs(monster.x - current.x) + 2, abs(monster.y - current.y) + 2)
-            distances.append((distance, monster))
-    else:
-        for character in player_team:
-            distance = max(abs(character.x - current.x) + 2, abs(character.y - current.y) + 2)
-            distances.append((distance, character))
-    new_distances = sorted(distances, key=itemgetter(0))
-    #return distances[0][0]
-    print(distances)
 
 ### ----------------- ###
 ### DRAWING FUNCTIONS ###
@@ -634,6 +661,7 @@ class Fighter(object):
         self.y = y
         self.is_player = is_player
         self.surprised = False
+        self.speed_left = 6
     # Meta info
     sprite = 'fighter'
     class_name = 'fighter'
@@ -716,6 +744,7 @@ class Cleric(object):
         self.y = y
         self.is_player = is_player
         self.surprised = False
+        self.speed_left = 6
     # Meta info
     sprite = 'cleric'
     class_name = 'cleric'
@@ -798,6 +827,7 @@ class Wizard(object):
         self.y = y
         self.is_player = is_player
         self.surprised = False
+        self.speed_left = 6
     # Meta info
     sprite = 'wizard'
     class_name = 'wizard'
@@ -880,6 +910,7 @@ class Rogue(object):
         self.y = y
         self.is_player = is_player
         self.surprised = False
+        self.speed_left = 6
     # Meta info
     sprite = 'rogue'
     class_name = 'rogue'
@@ -962,6 +993,7 @@ class Ranger(object):
         self.y = y
         self.is_player = is_player
         self.surprised = False
+        self.speed_left = 6
     # Meta info
     sprite = 'ranger'
     class_name = 'ranger'
@@ -973,6 +1005,7 @@ class Ranger(object):
     # DnD stuff
     level = 1
     proficiency_bonus = 2
+    speed_left = 6
     scores = {
         'strength': 13,
         'dex': 16,
@@ -1048,9 +1081,10 @@ class Goblin(object):
         self.y = y
         self.is_player = False
         self.surprised = False
+        self.speed_left = 6
     ac = 15
     hp = 7
-    speed = 30
+    speed = 6
     xp = 50
     languages = ['Common', 'Goblin']
     scores = {
@@ -1067,15 +1101,38 @@ class Goblin(object):
     sprite = 'goblin'
     def score_to_bonus(self, score):
         return math.floor((self.scores[score] - 10) / 2)
-    #def calculate_bonus(self, skill):
-    #    if self.proficiencies['skills'][skill][0] == True:
-    #        return self.score_to_bonus(self.proficiencies['skills'][skill][1]) + self.proficiency_bonus
-    #    else:
-    #        return self.score_to_bonus(self.proficiencies['skills'][skill][1])
     # Methods
     def draw_sprite(self):
         img = pygame.image.load(sprite(self.sprite)).convert_alpha()
         DISPLAY.blit(img, tile_to_pix(self.x, self.y))
+    def move (self, newx, newy, creatures):
+        if self.x == newx or self.y == newy:
+            distance = max(abs(enemy.x - self.x), abs(enemy.y - self.y))
+        else:
+            distance = max(abs(enemy.x - self.x) + 2, abs(enemy.y - self.y) + 2)
+        if not occupied(newx, newy, creatures):
+            self.x = newx
+            self.y = newy
+            self.speed_left -= distance
+    def attack(self, enemy):
+        ############# No melee attacks since movement AI is too hard
+        #distance = max(abs(enemy.x - self.x), abs(enemy.y - self.y))
+        #if enemy.x - self.x < 1:
+        #    # enemy x + 1
+        #elif enemyx - self.x > 1:
+        #    # 
+        #if distance <= 4:
+        #    # Scimitar attack
+        #    if roll20(4) >= enemy.ac:
+        #        damage = random.randint(1, 6) + 2
+        #        enemy.hp -= damage
+        #        # message?
+        #else:
+        # Shortbow attack
+        if roll20(4) >= enemy.ac:
+            damage = random.randint(1, 6) + 2
+            enemy.hp -= damage
+            # message?
 
 if __name__ == '__main__':
     main()
