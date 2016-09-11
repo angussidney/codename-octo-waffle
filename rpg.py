@@ -18,6 +18,7 @@ import random
 import sys
 import os
 import traceback
+import time
 import shelve
 from operator import attrgetter, itemgetter
 from send2trash import *
@@ -265,30 +266,40 @@ class CharacterSelection(SceneBase):
         if mouse_between_tiles(1, 5, 6, 5) and pressed[0]: # Cleric
             SAVE['PC'] = Cleric(7, 7, True)
             SAVE['PC'].name = 'Kei Frightfulwood'
+            SAVE['PC'].adress = 'You are'
+            SAVE['PC'].pronoun = 'You'
             SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'] = choose_npcs(SAVE['PC'].class_name)
             SAVE.sync()
             self.next = Introduction()
         if mouse_between_tiles(1, 7, 6, 7) and pressed[0]: # Wizard
             SAVE['PC'] = Wizard(7, 7, True)
             SAVE['PC'].name = 'Kei Frightfulwood'
+            SAVE['PC'].adress = 'You are'
+            SAVE['PC'].pronoun = 'You'
             SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'] = choose_npcs(SAVE['PC'].class_name)
             SAVE.sync()
             self.next = Introduction()
         if mouse_between_tiles(1, 9, 6, 9) and pressed[0]: # Ranger
             SAVE['PC'] = Ranger(7, 7, True)
             SAVE['PC'].name = 'Kei Frightfulwood'
+            SAVE['PC'].adress = 'You are'
+            SAVE['PC'].pronoun = 'You'
             SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'] = choose_npcs(SAVE['PC'].class_name)
             SAVE.sync()
             self.next = Introduction()
         if mouse_between_tiles(1, 11, 6, 11) and pressed[0]: # Fighter
             SAVE['PC'] = Fighter(7, 7, True)
             SAVE['PC'].name = 'Kei Frightfulwood'
+            SAVE['PC'].adress = 'You are'
+            SAVE['PC'].pronoun = 'You'
             SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'] = choose_npcs(SAVE['PC'].class_name)
             SAVE.sync()
             self.next = Introduction()
         if mouse_between_tiles(1, 13, 6, 13) and pressed[0]: # Rogue
             SAVE['PC'] = Rogue(7, 7, True)
             SAVE['PC'].name = 'Kei Frightfulwood'
+            SAVE['PC'].adress = 'You are'
+            SAVE['PC'].pronoun = 'You'
             SAVE['NPC1'], SAVE['NPC2'], SAVE['NPC3'] = choose_npcs(SAVE['PC'].class_name)
             SAVE.sync()
             self.next = Introduction()
@@ -367,8 +378,9 @@ class Introduction(SceneBase):
 
     def ProcessInput(self):
         pressed = pygame.mouse.get_pressed()
-        if mouse_between_tiles(5, 12, 9, 12) and pressed[0]: # Back button
+        if mouse_between_tiles(5, 12, 9, 12) and pressed[0]: # Continue button
             self.next = Sc1GoblinAttack()
+            time.sleep(0.2)
     
     def Update(self):
         pass
@@ -389,18 +401,18 @@ class Introduction(SceneBase):
 
         # Companions
         render_text_centered(7, 7, PIXELFONT, 'Your companions are', WHITE)
-        SAVE['NPC1'].x = 2
+        SAVE['NPC1'].x = 3
         SAVE['NPC1'].y = 9
         SAVE['NPC2'].x = 7
         SAVE['NPC2'].y = 8
-        SAVE['NPC3'].x = 12
+        SAVE['NPC3'].x = 11
         SAVE['NPC3'].y = 9
         SAVE['NPC1'].draw_sprite()
         SAVE['NPC2'].draw_sprite()
         SAVE['NPC3'].draw_sprite()
-        render_text_centered(2, 10, PIXELFONT, SAVE['NPC1'].name, WHITE)
+        render_text_centered(3, 10, PIXELFONT, SAVE['NPC1'].name, WHITE)
         render_text_centered(7, 9, PIXELFONT, SAVE['NPC2'].name, WHITE)
-        render_text_centered(12, 10, PIXELFONT, SAVE['NPC3'].name, WHITE)
+        render_text_centered(11, 10, PIXELFONT, SAVE['NPC3'].name, WHITE)
 
         # Continue
         set_tile(5, 12, 'styled_button_left')
@@ -416,10 +428,14 @@ class Sc1GoblinAttack(SceneBase):
         self.round_no = 0
         self.initiative = []
         self.turn = 0
-        self.message_queue = ['You have been attacked by a horde of goblins! Click to view more text.']
+        self.message_queue = ['When travelling, you were attacked by a horde of goblins! \n\nClick to view more text.']
 
     def ProcessInput(self):
-        pass
+        pressed = pygame.mouse.get_pressed()
+        if mouse_between_tiles(9, 11, 13, 13) and pressed[0]: # Back button
+            if len(self.message_queue) > 0:
+                del self.message_queue[0]
+                time.sleep(0.2)
 
     def Update(self):
         # Pre-combat setup
@@ -453,23 +469,25 @@ class Sc1GoblinAttack(SceneBase):
             # Special handling for surprise
             if self.round_no == 1:
                 current = self.initiative[self.turn]
-                current.speed_left = current.speed
                 if current.surprised:
-                    self.message = "%s surprised! %s cannot do anything until next turn.".format(current.adress, current.pronoun)
+                    self.message_queue.append(current.adress + " surprised! " + current.pronoun + " cannot do anything until next turn.")
                     current.surprised = False
                 elif current in self.non_controllable_characters:
                     # NPCs and monsters
                     enemy = determine_enemy(current, self.player_team, self.monster_team)
-                    current.attack(enemy)
+                    current.attack(enemy, self)
                 else:
                     # Player
                     pass
+                    current.speed_left = current.speed
+                # Onyl when appropriate
                 self.turn += 1
+                SAVE.sync()
                 
     def Render(self):
         # Draw scene
         draw_controls()
-        draw_message(self.message)
+        draw_message(self.message_queue[0])
         draw_scene(scene1)
 
         for creature in self.initiative:
@@ -611,10 +629,10 @@ def draw_controls ():
     set_tile(7, 11, 'end_button_right_blue')
     render_text_centered(6, 11, PIXELFONT, 'Actions', WHITE)
 
-    set_tile(5, 13, 'end_button_left_grey')
-    set_tile(6, 13, 'button_middle_grey')
-    set_tile(7, 13, 'end_button_right_grey')
-    render_text_centered(6, 13, PIXELFONT, 'Talk', WHITE)
+    set_tile(5, 13, 'end_button_left_blue')
+    set_tile(6, 13, 'button_middle_blue')
+    set_tile(7, 13, 'end_button_right_blue')
+    render_text_centered(6, 13, PIXELFONT, 'Move', WHITE)
 
 def draw_message (message):
     text_surf = render_textrect(message, PIXELFONT, tiles_to_rect(9, 11, 13, 13), BLACK, 1).convert_alpha()
@@ -662,17 +680,21 @@ class Fighter(object):
         self.is_player = is_player
         self.surprised = False
         self.speed_left = 6
+        self.hp = 12
     # Meta info
     sprite = 'fighter'
     class_name = 'fighter'
     name = 'Ben Shadowsoul'
-    adress = "You are"
+    adress = name + " is "
     pronoun = "They"
     spellcaster = False
     
     # DnD stuff
     level = 1
     proficiency_bonus = 2
+    ac = 16
+    max_hp = 12
+    speed = 6
     scores = {
         'strength': 16,
         'dex': 13,
@@ -732,10 +754,22 @@ class Fighter(object):
             return self.score_to_bonus(self.proficiencies['skills'][skill][1]) + self.proficiency_bonus
         else:
             return self.score_to_bonus(self.proficiencies['skills'][skill][1])
+    def saving_throw(self, ability):
+        if self.proficiencies['saving_throws'][ability][0] == True:
+            return self.score_to_bonus(ability) + self.proficiency_bonus
+        else:
+            return self.score_to_bonus(ability)
     # Methods
     def draw_sprite(self):
         img = pygame.image.load(sprite(self.sprite)).convert_alpha()
         DISPLAY.blit(img, tile_to_pix(self.x, self.y))
+    def attack(self, enemy, scene_obj):
+        if roll20(5) >= enemy.ac:
+            damage = random.randint(1, 8) + 3
+            enemy.hp -= damage
+            scene_obj.message_queue.append(self.name + " hit " + enemy.name + " with his crossbow, for " + str(damage) + " damage!")
+        else:
+            scene_obj.message_queue.append(self.name + " tried to hit " + enemy.name + " with his crossbow, but missed!")
 
 class Cleric(object):
     def __init__(self, x, y, is_player):
@@ -745,17 +779,22 @@ class Cleric(object):
         self.is_player = is_player
         self.surprised = False
         self.speed_left = 6
+        self.hp = 9
+        self.spell_slots = 2
     # Meta info
     sprite = 'cleric'
     class_name = 'cleric'
     name = 'Edana Earthlydrum'
-    adress = "You are"
+    adress = name + " is "
     pronoun = "They"
     spellcaster = True
     
     # DnD stuff
     level = 1
     proficiency_bonus = 2
+    ac = 13
+    max_hp = 9
+    speed = 6
     scores = {
         'strength': 14,
         'dex': 8,
@@ -815,10 +854,34 @@ class Cleric(object):
             return self.score_to_bonus(self.proficiencies['skills'][skill][1]) + self.proficiency_bonus
         else:
             return self.score_to_bonus(self.proficiencies['skills'][skill][1])
+    def saving_throw(self, ability):
+        if self.proficiencies['saving_throws'][ability][0] == True:
+            return self.score_to_bonus(ability) + self.proficiency_bonus
+        else:
+            return self.score_to_bonus(ability)
     # Methods
     def draw_sprite(self):
         img = pygame.image.load(sprite(self.sprite)).convert_alpha()
         DISPLAY.blit(img, tile_to_pix(self.x, self.y))
+    def draw_sprite(self):
+        img = pygame.image.load(sprite(self.sprite)).convert_alpha()
+        DISPLAY.blit(img, tile_to_pix(self.x, self.y))
+    def attack(self, enemy, scene_obj):
+        if self.spell_slots > 0 and random.randint(1, 2) == 1:
+            # Guiding Bolt
+            if roll20(5) >= enemy.ac:
+                damage = random.randint(1, 6) + random.randint(1, 6) + random.randint(1, 6) + random.randint(1, 6)
+                enemy.hp -= damage
+                scene_obj.message_queue.append(self.name + " cast Guiding Bolt on " + enemy.name + ", for " + str(damage) + " damage!")
+            else:
+                scene_obj.message_queue.append(self.name + " tried to cast Guiding Bolt on " + enemy.name + ", but failed!")
+        else:
+            if roll20(1) >= enemy.ac:
+                damage = random.randint(1, 8) - 1
+                enemy.hp -= damage
+                scene_obj.message_queue.append(self.name + " hit " + enemy.name + " with her crossbow, for " + str(damage) + " damage!")
+            else:
+                scene_obj.message_queue.append(self.name + " tried to hit " + enemy.name + " with her crossbow, but missed!")
 
 class Wizard(object):
     def __init__(self, x, y, is_player):
@@ -828,17 +891,22 @@ class Wizard(object):
         self.is_player = is_player
         self.surprised = False
         self.speed_left = 6
+        self.hp = 13
+        self.spell_slots = 2
     # Meta info
     sprite = 'wizard'
     class_name = 'wizard'
     name = 'Ceithin Jadeflail'
-    adress = "You are"
+    adress = name + " is "
     pronoun = "They"
     spellcaster = True
     
     # DnD stuff
     level = 1
     proficiency_bonus = 2
+    ac = 12
+    max_hp = 7
+    speed = 6
     scores = {
         'strength': 8,
         'dex': 14,
@@ -898,10 +966,38 @@ class Wizard(object):
             return self.score_to_bonus(self.proficiencies['skills'][skill][1]) + self.proficiency_bonus
         else:
             return self.score_to_bonus(self.proficiencies['skills'][skill][1])
+    def saving_throw(self, ability):
+        if self.proficiencies['saving_throws'][ability][0] == True:
+            return self.score_to_bonus(ability) + self.proficiency_bonus
+        else:
+            return self.score_to_bonus(ability)
     # Methods
     def draw_sprite(self):
         img = pygame.image.load(sprite(self.sprite)).convert_alpha()
         DISPLAY.blit(img, tile_to_pix(self.x, self.y))
+    def attack(self, enemy, scene_obj):
+        if self.spell_slots > 0  and random.randint(1, 2) == 1:
+            if random.randint(1, 2) == 1:
+                # Magic missile
+                damage = random.randint(1, 4) + random.randint(1, 4) + random.randint(1, 4) + 3
+                enemy.hp -= damage
+                scene_obj.message_queue.append(self.name + " cast Magic Missile on " + enemy.name + ", for " + str(damage) + " damage!")
+            else:
+                # Burning hands
+                if roll20(enemy.saving_throw('dex')) <= 13:
+                    damage = random.randint(1, 6) + random.randint(1, 6) + random.randint(1, 6)
+                    enemy.hp -= damage
+                    scene_obj.message_queue.append(self.name + " cast Burning Hands on " + enemy.name + ", for " + str(damage) + " damage!")
+                else:
+                    scene_obj.message_queue.append(self.name + " tried to cast Burning Hands on " + enemy.name + ", but failed!")
+        else:
+            if roll20(5) >= enemy.ac:
+                damage = random.randint(1, 4) + 3
+                enemy.hp -= damage
+                scene_obj.message_queue.append(self.name + " hit " + enemy.name + " with his dagger, for " + str(damage) + " damage!")
+            else:
+                scene_obj.message_queue.append(self.name + " tried to hit " + enemy.name + " with his dagger, but missed!")
+                
 
 class Rogue(object):
     def __init__(self, x, y, is_player):
@@ -911,17 +1007,21 @@ class Rogue(object):
         self.is_player = is_player
         self.surprised = False
         self.speed_left = 6
+        self.hp = 8
     # Meta info
     sprite = 'rogue'
     class_name = 'rogue'
     name = 'Conal Trickybones'
-    adress = "You are"
+    adress = name + " is "
     pronoun = "They"
     spellcaster = False
     
     # DnD stuff
     level = 1
     proficiency_bonus = 2
+    ac = 14
+    max_hp = 8
+    speed = 6
     scores = {
         'strength': 12,
         'dex': 16,
@@ -981,11 +1081,40 @@ class Rogue(object):
             return self.score_to_bonus(self.proficiencies['skills'][skill][1]) + self.proficiency_bonus
         else:
             return self.score_to_bonus(self.proficiencies['skills'][skill][1])
+    def saving_throw(self, ability):
+        if self.proficiencies['saving_throws'][ability][0] == True:
+            return self.score_to_bonus(ability) + self.proficiency_bonus
+        else:
+            return self.score_to_bonus(ability)
     # Methods
     def draw_sprite(self):
         img = pygame.image.load(sprite(self.sprite)).convert_alpha()
         DISPLAY.blit(img, tile_to_pix(self.x, self.y))
-
+    def attack(self, enemy, scene_obj):
+        if random.randint(1, 2) == 1:
+            # Shortbow
+            if roll20(5) >= enemy.ac:
+                damage = random.randint(1, 6) + 3
+                enemy.hp -= damage
+                scene_obj.message_queue.append(self.name + " hit " + enemy.name + " with his shortbow, for " + str(damage) + " damage!")
+            else:
+                scene_obj.message_queue.append(self.name + " tried to hit " + enemy.name + " with his shortbow, but missed!")
+        else:
+            # Dagger 1
+            if roll20(5) >= enemy.ac:
+                damage = random.randint(1, 4) + 3
+                enemy.hp -= damage
+                scene_obj.message_queue.append(self.name + " hit " + enemy.name + " with his dagger, for " + str(damage) + " damage!")
+            else:
+                scene_obj.message_queue.append(self.name + " tried to hit " + enemy.name + " with his dagger, but missed!")
+            # Dagger 2
+            if roll20(5) >= enemy.ac:
+                damage = random.randint(1, 4) + 3
+                enemy.hp -= damage
+                scene_obj.message_queue.append(self.name + " hit " + enemy.name + " with his dagger, for " + str(damage) + " damage!")
+            else:
+                scene_obj.message_queue.append(self.name + " tried to hit " + enemy.name + " with his dagger, but missed!")
+            
 class Ranger(object):
     def __init__(self, x, y, is_player):
         self.initiative = 10
@@ -994,18 +1123,21 @@ class Ranger(object):
         self.is_player = is_player
         self.surprised = False
         self.speed_left = 6
+        self.hp = 11
     # Meta info
     sprite = 'ranger'
     class_name = 'ranger'
     name = 'Culhwch Blacktroll'
-    adress = "You are"
+    adress = name + " is "
     pronoun = "They"
     spellcaster = False
     
     # DnD stuff
     level = 1
     proficiency_bonus = 2
-    speed_left = 6
+    ac = 16
+    max_hp = 11
+    speed = 6
     scores = {
         'strength': 13,
         'dex': 16,
@@ -1065,10 +1197,22 @@ class Ranger(object):
             return self.score_to_bonus(self.proficiencies['skills'][skill][1]) + self.proficiency_bonus
         else:
             return self.score_to_bonus(self.proficiencies['skills'][skill][1])
+    def saving_throw(self, ability):
+        if self.proficiencies['saving_throws'][ability][0] == True:
+            return self.score_to_bonus(ability) + self.proficiency_bonus
+        else:
+            return self.score_to_bonus(ability)
     # Methods
     def draw_sprite(self):
         img = pygame.image.load(sprite(self.sprite)).convert_alpha()
         DISPLAY.blit(img, tile_to_pix(self.x, self.y))
+    def attack(self, enemy, scene_obj):
+        if roll20(5) >= enemy.ac:
+            damage = random.randint(1, 8) + 3
+            enemy.hp -= damage
+            scene_obj.message_queue.append(self.name + " hit " + enemy.name + " with his longbow, for " + str(damage) + " damage!")
+        else:
+            scene_obj.message_queue.append(self.name + " tried to hit " + enemy.name + " with his longbow, but missed!")
 
 ### ------------ ###
 ###   MONSTERS   ###
@@ -1082,6 +1226,9 @@ class Goblin(object):
         self.is_player = False
         self.surprised = False
         self.speed_left = 6
+    name = 'a goblin'
+    adress = "A goblin is"
+    pronoun = "It"
     ac = 15
     hp = 7
     speed = 6
@@ -1101,6 +1248,8 @@ class Goblin(object):
     sprite = 'goblin'
     def score_to_bonus(self, score):
         return math.floor((self.scores[score] - 10) / 2)
+    def saving_throw(self, ability):
+        return self.score_to_bonus(ability)
     # Methods
     def draw_sprite(self):
         img = pygame.image.load(sprite(self.sprite)).convert_alpha()
@@ -1114,7 +1263,7 @@ class Goblin(object):
             self.x = newx
             self.y = newy
             self.speed_left -= distance
-    def attack(self, enemy):
+    def attack(self, enemy, scene_obj):
         ############# No melee attacks since movement AI is too hard
         #distance = max(abs(enemy.x - self.x), abs(enemy.y - self.y))
         #if enemy.x - self.x < 1:
@@ -1132,9 +1281,9 @@ class Goblin(object):
         if roll20(4) >= enemy.ac:
             damage = random.randint(1, 6) + 2
             enemy.hp -= damage
-            # message?
+            scene_obj.message_queue.append("A goblin hit " + enemy.name + " with their Shortbow for " + str(damage) + " damage!")
+        else:
+            scene_obj.message_queue.append("A goblin tried to hit " + enemy.name + " with their Shortbow, but missed!")
 
 if __name__ == '__main__':
     main()
-
-
