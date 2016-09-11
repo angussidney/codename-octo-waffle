@@ -716,7 +716,7 @@ def draw_controls ():
         set_tile(3, 13, 'end_button_right_grey')
     render_text_centered(2, 13, PIXELFONT, 'Spells', WHITE)
 
-    #render_text_centered(4, 12, PIXELFONT, 'Controls not implemented.', BLACK)
+    render_text_centered(4, 12, PIXELFONT, 'Controls not implemented.', BLACK)
 
     set_tile(5, 11, 'end_button_left_grey')
     set_tile(6, 11, 'button_middle_grey')
