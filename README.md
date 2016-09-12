@@ -11,3 +11,9 @@ Storyline based on the original adventure 'The Dungeons of Feymere'.
  - Python 3.5
  - Pygame 1.9.2 (get it [here](http://www.lfd.uci.edu/~gohlke/pythonlibs/#pygame) and install with  `pip install <filename>.whl`)
  - Send2Trash 1.3.0 (get it [here](https://github.com/hsoft/send2trash))
+
+### Download
+
+Click 'clone or download' at the top of this page to download.
+
+To start the game, run `rpg.py` via IDLE.
